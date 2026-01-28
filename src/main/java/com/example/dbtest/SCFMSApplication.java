@@ -20,7 +20,7 @@ public class SCFMSApplication extends Application {
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();
-        Twilio.init("", "");
+        //Twilio.init("", "");
         //MessageCreator twoFactorAuth = Message.creator(new PhoneNumber("+112058269239"),new PhoneNumber("+18559970149"), "Hello!");
     }
 }
