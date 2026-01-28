@@ -1,12 +1,14 @@
 package com.example.dbtest;
 
+import com.twilio.rest.api.v2010.account.MessageCreator;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import com.twilio.Twilio;
-import javafx.scene.control.Button;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
 
 public class SCFMSController {
-    @FXML
-    
+
+    @FXML public void textSend(){
+        MessageCreator twoFactorAuth = Message.creator(new PhoneNumber("+12058269239"),new PhoneNumber("+18559970149"), "Hello!");
+        }
 
 }

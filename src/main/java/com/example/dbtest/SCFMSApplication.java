@@ -21,6 +21,6 @@ public class SCFMSApplication extends Application {
         stage.setScene(scene);
         stage.show();
         Twilio.init("AC82eaebf56afcec16ba38bc16775dbabd", "b72b2705cda0f56836e032bafcde5bcf");
-        MessageCreator twoFactorAuth = Message.creator(new PhoneNumber("+112058269239"),new PhoneNumber("+18559970149"), "Hello!");
+        //MessageCreator twoFactorAuth = Message.creator(new PhoneNumber("+112058269239"),new PhoneNumber("+18559970149"), "Hello!");
     }
 }
