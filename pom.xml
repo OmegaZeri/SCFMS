@@ -20,8 +20,8 @@
             <version>8.23.0</version>
             <exclusions>
                 <exclusion>
-                    <groupId>jakarta.activation</groupId>
-                    <artifactId>jakarta.activation-api</artifactId>
+                    <groupId>javax.activation</groupId>
+                    <artifactId>javax.activation-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
