@@ -1,0 +1,6 @@
+{
+  "host": "localhost",
+  "user": "dbeaver",
+  "password": "yourpassword",
+  "database": "testdb"
+}
