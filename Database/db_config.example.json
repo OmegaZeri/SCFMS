@@ -1,6 +1,6 @@
 {
   "host": "localhost",
-  "user": "dbeaver",
+  "user": "yourusername",
   "password": "yourpassword",
-  "database": "testdb"
+  "database": "yourdatabase"
 }
