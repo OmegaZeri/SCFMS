@@ -31,6 +31,16 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+dist/
+build/
+__pycache__/
+*.pyc
+*.pyo
+
+# Local database config and packaged seed artifacts
+Database/db_config.json
+dist/db_config.json
+*.spec
 
 ### VS Code ###
 .vscode/
