@@ -1,14 +1,19 @@
 package com.example.dbtest;
 
-import com.twilio.Twilio;
-import javafx.application.Application;
+
+import java.sql.*;
 
 public class Launcher {
-    public static void main(String[] args) {
-        Application.launch(SCFMSApplication.class, args);
-        Twilio.init("AC82eaebf56afcec16ba38bc16775dbabd", "b72b2705cda0f56836e032bafcde5bcf");
-
+    public static void main(String[] args) throws SQLException {
+        String connection = "jdbc:mysql://localhost:3306/SCFMS";
+        String user  = "root";
+        String password = "T1lting@W1ndm1lls*";
+        Connection conn = DriverManager.getConnection(connection,user,password);
+        Statement stmnt = conn.createStatement();
+        ResultSet rs = stmnt.executeQuery("select userName from users where userID >= 1040000");
+        while(rs.next()){
+            String databaseName= rs.getString(1);
+            System.out.println(databaseName);
+        }
     }
-
-
 }
