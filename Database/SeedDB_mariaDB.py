@@ -15,12 +15,20 @@ NUM_BUILDINGS = 8
 MIN_ROOMS_PER_BUILDING = 8
 MAX_ROOMS_PER_BUILDING = 16
 MAX_LOGS_PER_USER = 6
+CLASSIFICATION_PERMISSIONS = {
+    "undergrad": 1,
+    "grad": 2,
+    "faculty": 3,
+    "security officer": 4,
+}
 
 USERS_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS users (
     userID INT NOT NULL PRIMARY KEY,
     userName VARCHAR(100) NOT NULL,
     Email VARCHAR(150) NOT NULL UNIQUE,
+    Classification VARCHAR(50) NOT NULL,
+    Permissions INT NOT NULL,
     Age INT,
     Created DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -58,8 +66,8 @@ CREATE TABLE IF NOT EXISTS logs (
 """
 
 INSERT_USERS_SQL = """
-INSERT INTO users (userID, userName, Email, Age, Created)
-VALUES (%s, %s, %s, %s, %s)
+INSERT INTO users (userID, userName, Email, Classification, Permissions, Age, Created)
+VALUES (%s, %s, %s, %s, %s, %s, %s)
 """
 
 INSERT_BUILDINGS_SQL = """
@@ -134,7 +142,16 @@ def gen_unique_user_id(used_ids: set[int]) -> int:
     return uid
 
 
-def build_users() -> list[tuple[int, str, str, int, object]]:
+def gen_classification_and_permissions() -> tuple[str, int]:
+    classification = random.choices(
+        population=list(CLASSIFICATION_PERMISSIONS.keys()),
+        weights=[70, 15, 10, 5],
+        k=1,
+    )[0]
+    return classification, CLASSIFICATION_PERMISSIONS[classification]
+
+
+def build_users() -> list[tuple[int, str, str, str, int, int, object]]:
     users = []
     used_emails: set[str] = set()
     used_user_ids: set[int] = set()
@@ -146,11 +163,14 @@ def build_users() -> list[tuple[int, str, str, int, object]]:
 
         email = gen_unique_email(first, last, used_emails)
         user_id = gen_unique_user_id(used_user_ids)
+        classification, permissions = gen_classification_and_permissions()
 
         users.append((
             user_id,
             f"{first} {last}",
             email,
+            classification,
+            permissions,
             random.randint(18, 22),
             fake.date_time_this_decade(),  # datetime object; mysql connector handles it
         ))
@@ -193,7 +213,7 @@ def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int]]:
 
 
 def build_logs(
-    users: list[tuple[int, str, str, int, object]],
+    users: list[tuple[int, str, str, str, int, int, object]],
     rooms: list[tuple[int, int]],
 ) -> list[tuple[int, int, date]]:
     logs = []
