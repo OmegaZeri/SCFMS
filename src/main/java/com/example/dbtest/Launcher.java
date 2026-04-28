@@ -1,19 +1,33 @@
 package com.example.dbtest;
-
-
+import com.example.dbtest.sqlHandler.*;
+import java.util.Scanner;
 import java.sql.*;
 
 public class Launcher {
     public static void main(String[] args) throws SQLException {
-        String connection = "jdbc:mysql://localhost:3306/SCFMS";
-        String user  = "root";
-        String password = "T1lting@W1ndm1lls*";
+        Scanner scan = new Scanner(System.in);
+        sqlHandler sql = new sqlHandler();
+        System.out.println("Please enter DB Credentials");
+        sql.setSqlUser();
+        String user = sql.getSqlUser();
+        sql.setSqlPassword();
+        String password = sql.getSqlPassword();
+        String connection = sql.getSqlConnection();
         Connection conn = DriverManager.getConnection(connection,user,password);
-        Statement stmnt = conn.createStatement();
-        ResultSet rs = stmnt.executeQuery("select userName from users where userID >= 1040000");
+        if(conn.isValid(300)) {
+            System.out.println("Connection Established");
+        }
+        String query = "select userName, email from users where email = ?";
+        PreparedStatement pstmnt = conn.prepareStatement(query);
+        pstmnt.setString(1, sql.login());
+        ResultSet rs = pstmnt.executeQuery();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columnCount = rsmd.getColumnCount();
         while(rs.next()){
-            String databaseName= rs.getString(1);
-            System.out.println(databaseName);
+            for(int i=1; i < columnCount+1; i++){
+                String userLogin= rs.getString(i);
+                System.out.println(userLogin);
+            }
         }
     }
 }
