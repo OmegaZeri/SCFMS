@@ -17,17 +17,18 @@ public class sqlHandler {
                     return sqlPassword;
                 }
                 public void setSqlUser() {
-                    System.out.println("Please enter your username: ");
+                    System.out.println("Please enter your DB username: ");
                     sqlUser = scan.nextLine();
-                    this.sqlUser = sqlUser;
                 }
                 public void setSqlPassword() {
-                    System.out.println("Please enter your password: ");
+                    System.out.println("Please enter your DB password: ");
                     sqlPassword = scan.nextLine();
-                    this.sqlPassword = sqlPassword;
                 }
-                public String login(){
-                    System.out.println("Please enter your SCFMS email:");
-                    return scan.nextLine();
+                public String logQuery (){
+                    return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where userID = 1003372";
                 }
+                public String reportGen (){
+                    return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= ? - interval 30 day";
+                }
+
 }
