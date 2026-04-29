@@ -24,8 +24,14 @@ public class sqlHandler {
                     System.out.println("Please enter your DB password: ");
                     sqlPassword = scan.nextLine();
                 }
-                public String logQuery (){
+                public String logsQuery (){
                     return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where userID = 1003372";
+                }
+                public String loginQuery () {
+                    return "select email, password from users where email = ? AND password = ?";
+                }
+                public String welcomeQuery() {
+                    return "select userName from users where password = ?";
                 }
                 public String reportGen (){
                     return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= ? - interval 30 day";
