@@ -101,4 +101,40 @@ public class Launcher {
         }
         System.out.println(rowNum / 5);
     }
+    public static void startEvent() throws SQLException {
+        /*Copy and pasted from above becuase idk what else to put here*/
+        sqlHandler sqlHandler = new sqlHandler();
+        sessionToken sT = new sessionToken();
+        PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.reportGen());
+        pstmnt.setString(1, String.valueOf(LocalDate.now()));
+        ResultSet rs = pstmnt.executeQuery();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columnCount = rsmd.getColumnCount();
+        int rowNum = 0;
+        while (rs.next()) {
+            for (int i = 1; i < columnCount + 1; i++) {
+                String logString = rs.getString(i);
+                System.out.println(logString + ": ");
+                rowNum += 1;
+            }
+        }
+    }
+    public static void emergency() throws SQLException {
+        /*Copy and pasted from above becuase idk what else to put here*/
+        sqlHandler sqlHandler = new sqlHandler();
+        sessionToken sT = new sessionToken();
+        PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.reportGen());
+        pstmnt.setString(1, String.valueOf(LocalDate.now()));
+        ResultSet rs = pstmnt.executeQuery();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columnCount = rsmd.getColumnCount();
+        int rowNum = 0;
+        while (rs.next()) {
+            for (int i = 1; i < columnCount + 1; i++) {
+                String logString = rs.getString(i);
+                System.out.println(logString + ": ");
+                rowNum += 1;
+            }
+        }
+    }
 }
