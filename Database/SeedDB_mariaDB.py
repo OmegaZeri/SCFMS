@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS users (
     userID INT NOT NULL PRIMARY KEY,
     userName VARCHAR(100) NOT NULL,
     Email VARCHAR(150) NOT NULL UNIQUE,
+    Password VARCHAR(100) NOT NULL,
+    PhoneNumber VARCHAR(25) NOT NULL,
     Classification VARCHAR(50) NOT NULL,
     Permissions INT NOT NULL,
     Age INT,
@@ -66,8 +68,8 @@ CREATE TABLE IF NOT EXISTS logs (
 """
 
 INSERT_USERS_SQL = """
-INSERT INTO users (userID, userName, Email, Classification, Permissions, Age, Created)
-VALUES (%s, %s, %s, %s, %s, %s, %s)
+INSERT INTO users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
 INSERT_BUILDINGS_SQL = """
@@ -151,7 +153,15 @@ def gen_classification_and_permissions() -> tuple[str, int]:
     return classification, CLASSIFICATION_PERMISSIONS[classification]
 
 
-def build_users() -> list[tuple[int, str, str, str, int, int, object]]:
+def gen_password() -> str:
+    return fake.password(length=12, special_chars=True, digits=True, upper_case=True, lower_case=True)
+
+
+def gen_phone_number() -> str:
+    return fake.numerify(text="##########")
+
+
+def build_users() -> list[tuple[int, str, str, str, str, str, int, int, object]]:
     users = []
     used_emails: set[str] = set()
     used_user_ids: set[int] = set()
@@ -163,12 +173,16 @@ def build_users() -> list[tuple[int, str, str, str, int, int, object]]:
 
         email = gen_unique_email(first, last, used_emails)
         user_id = gen_unique_user_id(used_user_ids)
+        password = gen_password()
+        phone_number = gen_phone_number()
         classification, permissions = gen_classification_and_permissions()
 
         users.append((
             user_id,
             f"{first} {last}",
             email,
+            password,
+            phone_number,
             classification,
             permissions,
             random.randint(18, 22),
@@ -213,7 +227,7 @@ def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int]]:
 
 
 def build_logs(
-    users: list[tuple[int, str, str, str, int, int, object]],
+    users: list[tuple[int, str, str, str, str, str, int, int, object]],
     rooms: list[tuple[int, int]],
 ) -> list[tuple[int, int, date]]:
     logs = []
