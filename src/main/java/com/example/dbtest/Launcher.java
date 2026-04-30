@@ -1,6 +1,6 @@
 package com.example.dbtest;
 
-import java.util.Scanner;
+import java.util.*;
 import java.sql.*;
 import java.time.*;
 public class Launcher {
@@ -41,50 +41,76 @@ public class Launcher {
         System.out.println("Please enter your SCFMS password: ");
         String password = scan.nextLine();
         sqlHandler sql = new sqlHandler();
-        PreparedStatement pstmnt = conn.prepareStatement(sql.loginQuery());
-        pstmnt.setString(1, username);
-        pstmnt.setString(2, password);
-        ResultSet rs = pstmnt.executeQuery();
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columnCount = rsmd.getColumnCount();
-        if (rs.next()) {
-            sT.setConsoleUsername(username);
-            sT.setConsoleUserPassword(password);
-            pstmnt = conn.prepareStatement(sql.welcomeQuery());
-            pstmnt.setString(1, sT.getConsolePassword());
-            ResultSet rs2 = pstmnt.executeQuery();
-            rs2.next();
-            System.out.println("Login Successful, welcome " + rs2.getString(1));
-            sT.setConsoleUserID(rs2.getInt(2));
-            accessAttempt = 0;
-            pstmnt = conn.prepareStatement(sql.permsQuery());
-            pstmnt.setString(1, sT.getConsolePassword());
-            rs = pstmnt.executeQuery();
-            rs.next();
-            if (rs.getInt(1) < 4) {
-                int perms = 1;
-                sT.setConsoleUserPermissions(perms);
-                menu(sT.getConsolePermissions(), sT);
+        boolean resultsFound = false;
+        try(PreparedStatement loginPstmnt = conn.prepareStatement(sql.loginQuery())) {
+            loginPstmnt.setString(1, username);
+            loginPstmnt.setString(2, password);
+            try (ResultSet rs = loginPstmnt.executeQuery()) {
+                accessAttempt = 0;
+                if (rs.next()) {
+                    resultsFound = true;
+                    sT.setConsoleUsername(username);
+                    sT.setConsoleUserPassword(password);
+                    ResultSetMetaData rsmd = rs.getMetaData();
+                    int columnCount = rsmd.getColumnCount();
+                    try(PreparedStatement phoneNumberPstmnt = conn.prepareStatement(sql.phoneNumberQuery())) {
+                        phoneNumberPstmnt.setString(1, sT.getConsolePassword());
+                        try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
+                            if (phoneRS.next()) {
+                                sT.setConsolePhoneNumber(phoneRS.getLong(1));
+                            }
+                        }
+                    }
+                    try (PreparedStatement welcomePstmnt =conn.prepareStatement(sql.welcomeQuery())){
+                        welcomePstmnt.setString(1, sT.getConsolePassword());
+                        try (ResultSet welcomeRS = welcomePstmnt.executeQuery()){
+                            if(welcomeRS.next()){
+                                System.out.println("Login Successful, welcome " + welcomeRS.getString(1));
+                                sT.setConsoleUserID(welcomeRS.getInt(2));
+                            }
+                        }
+                    }
+                    try (PreparedStatement permissionsPstmnt =conn.prepareStatement(sql.permsQuery())){
+                    permissionsPstmnt.setString(1, sT.getConsolePassword());
+                        try(ResultSet permsRS = permissionsPstmnt.executeQuery() ){
+                            if (permsRS.next()){
+                                if (permsRS.getInt(1) < 4) {
+                                    int perms = 1;
+                                    sT.setConsoleUserPermissions(perms);
+                                    menu(sT.getConsolePermissions(), sT);
+                                }
+                                //Checks users permissions, and sets their console menu to the correct permissions
+                                else if (permsRS.getInt(1) == 4) {
+                                    int perms = 4;
+                                    sT.setConsoleUserPermissions(perms);
+                                    menu(sT.getConsolePermissions(), sT);
+                                }
+                            }
+                        }
+                    }
+
+
+
+
+                    } else {
+                        if (!resultsFound) {
+                            accessAttempt += 1;
+                            System.out.println("Invalid login info, try again.");
+                            login();
+                        }
+                        if (accessAttempt == 3) {
+                            System.out.println("You have failed to login 3 times, client will now shutdown");
+                            System.exit(0);
+                        }
+                    }
+                }
             }
-            //Checks users permissions, and sets their console menu to the correct permissions
-            else if (rs.getInt(1) == 4) {
-                int perms = 4;
-                sT.setConsoleUserPermissions(perms);
-                menu(sT.getConsolePermissions(), sT);
-            }
-        } else if (!rs.next()) {
-            accessAttempt += 1;
-            System.out.println("Invalid login info, try again.");
-            login();
-        } else if (accessAttempt == 3) {
-            System.out.println("You have failed to login 3 times, client will now shutdown");
-            System.exit(0);
         }
-    }
+
 
     public static void menu(int i, sessionToken sT) throws SQLException {
         int perms = i;
-        int choice;
+        int choice = 0;
         Scanner scan = new Scanner(System.in);
         //Undergrad Menu Choices
         if (perms == 1) {
@@ -111,7 +137,9 @@ public class Launcher {
                 System.out.println("      ------1. Access Logs------      ");
                 System.out.println("       ------2. Start Event------     ");
                 System.out.println("       ------3. Emergency------       ");
-                System.out.println("       ------  4. Quit   ------      ");
+                System.out.println("   ------4. Generate Reports------       ");
+                System.out.println("      ------5. Create User------       ");
+                System.out.println("       ------  6. Quit   ------      ");
                 choice = scan.nextInt();
                 switch (choice) {
                     case 1:
@@ -130,12 +158,15 @@ public class Launcher {
                         System.out.println("Generating log report");
                         genReport();
                     case 5:
+                        System.out.println("Redirecting to user creation menu");
+                        createUser(sT);
+                    case 6:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
-            } while (choice != 4);
+            } while (choice != 6);
         }
     }
 
@@ -214,4 +245,48 @@ public class Launcher {
         }
         menu(sT.getConsolePermissions(), sT);
     }
-}
+    public static void createUser(sessionToken sT) throws SQLException {
+        if(twoFactorCode(sT)){
+            System.out.println("User Creation Menu: " + "\nPlease pay attention to formatting");
+            //Sql code use scfms;
+            //select max(userID) from users;
+            //insert into users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created) values (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            //select "columnname" from users where "columnname" = ?
+            //if (rs.next){
+            //	System.out.println("columnname" entry already exists, retry)
+            //}
+            //Recalls menufunction
+            menu(sT.getConsolePermissions(),sT);
+        }
+        else{
+            System.out.println("Closing Console");
+            System.exit(0);
+        }
+    }
+    public static boolean twoFactorCode(sessionToken sT){
+        int twofactAttempts = 0;
+        Scanner phoneScan = new Scanner(System.in);
+        System.out.println("Sending 2FA code to " + sT.getConsolePhoneNumber());
+        Random twoFactorGenerator = new Random();
+        int code = twoFactorGenerator.nextInt(90000) + 10000;
+        if (code == 100000) {code -= 1;}
+        System.out.println("334-670-1110: " + code );
+        System.out.println("Please enter the code you received on your device.");
+        boolean auth = false;
+        if (twofactAttempts==3){
+            System.out.println("Too many failed attempts, closing console.");
+        }
+        else if(phoneScan.nextInt()==code){
+            System.out.println("Success! Redirecting...");
+            auth = true;
+        }
+        else if(!auth){
+            twofactAttempts =+ 1;
+            System.out.println("Incorrect code, resending");
+            twoFactorCode(sT);
+        }
+        return auth;
+    }
+
+
+} //end of program
