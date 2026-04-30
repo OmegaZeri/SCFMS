@@ -9,6 +9,7 @@ import java.time.*;
 public class Launcher {
     static Connection conn;
     static int accessAttempt;
+
     public static void main(String[] args) throws SQLException {
         dbConnector();
         login();
@@ -31,6 +32,7 @@ public class Launcher {
             System.out.println("Connection Established");
         }
     }
+
     //Undergrad login example:    sdaniels@example.edu
     //                            'h%(758KhdmL&'
     //login function for console
@@ -48,21 +50,21 @@ public class Launcher {
         ResultSet rs = pstmnt.executeQuery();
         ResultSetMetaData rsmd = rs.getMetaData();
         int columnCount = rsmd.getColumnCount();
-        if (rs.next()){
+        if (rs.next()) {
             sT.setConsoleUsername(username);
             sT.setConsoleUserPassword(password);
             pstmnt = conn.prepareStatement(sql.welcomeQuery());
             pstmnt.setString(1, sT.getConsolePassword());
-            ResultSet rs2 =pstmnt.executeQuery();
+            ResultSet rs2 = pstmnt.executeQuery();
             rs2.next();
             System.out.println("Login Successful, welcome " + rs2.getString(1));
             sT.setConsoleUserID(rs2.getInt(2));
-            accessAttempt =0;
+            accessAttempt = 0;
             pstmnt = conn.prepareStatement(sql.permsQuery());
             pstmnt.setString(1, sT.getConsolePassword());
             rs = pstmnt.executeQuery();
             rs.next();
-            if(rs.getInt(1) < 4 ) {
+            if (rs.getInt(1) < 4) {
                 int perms = 1;
                 sT.setConsoleUserPermissions(perms);
                 menu(sT.getConsolePermissions(), sT);
@@ -73,26 +75,27 @@ public class Launcher {
                 sT.setConsoleUserPermissions(perms);
                 menu(sT.getConsolePermissions(), sT);
             }
-        }
-        else if(!rs.next()){
-            accessAttempt+=1;
+        } else if (!rs.next()) {
+            accessAttempt += 1;
             System.out.println("Invalid login info, try again.");
             login();
-        }
-        else if(accessAttempt==3){
+        } else if (accessAttempt == 3) {
             System.out.println("You have failed to login 3 times, client will now shutdown");
             System.exit(0);
         }
     }
+
     public static void menu(int i, sessionToken sT) throws SQLException {
         int perms = i;
         int choice;
         Scanner scan = new Scanner(System.in);
-        if (perms == 1){
+        if (perms == 1) {
             do {
                 System.out.println("------Example University Console------");
                 System.out.println("      ------1. Access Logs------      ");
-                System.out.println("       ------  2. Quit   ------      ");
+                System.out.println("       ------2. Start Event------     ");
+                System.out.println("       ------3. Emergency------       ");
+                System.out.println("       ------  4. Quit   ------      ");
                 choice = scan.nextInt();
                 switch (choice) {
                     case 1:
@@ -100,17 +103,25 @@ public class Launcher {
                         accessLogs(sT);
                         break;
                     case 2:
+                        System.out.println("Redirecting to start event menu");
+                        startEvent(sT);
+                        break;
+                    case 3:
+                        System.out.println("Redirecting to emergency menu");
+                        emergency(sT);
+                        break;
+                    case 4:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
             } while (choice != 2);
-        }
-        else if (perms == 4){
+        } else if (perms == 4) {
 
         }
     }
+
     public static void accessLogs(sessionToken sT) throws SQLException {
         sqlHandler sqlHandler = new sqlHandler();
         PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.logsQuery());
@@ -118,18 +129,19 @@ public class Launcher {
         ResultSet rsLogs = pstmnt.executeQuery();
         ResultSetMetaData rsmd = rsLogs.getMetaData();
         int columnCount = rsmd.getColumnCount();
-        boolean rowsFound= false;
+        boolean rowsFound = false;
         while (rsLogs.next()) {
-            rowsFound= true;
+            rowsFound = true;
             for (int i = 1; i <= columnCount; i++) {
                 System.out.print(rsmd.getColumnName(i) + ": " + rsLogs.getString(i) + " ");
             }
             System.out.println();
         }
-        if (!rowsFound){
+        if (!rowsFound) {
             System.out.println("No logs to display, try opening some doors.");
         }
     }
+
     public static void genReport() throws SQLException {
         sqlHandler sqlHandler = new sqlHandler();
         sessionToken sT = new sessionToken();
@@ -148,10 +160,10 @@ public class Launcher {
         }
         System.out.println(rowNum / 5);
     }
-    public static void startEvent() throws SQLException {
+
+    public static void startEvent(int i, sessionToken sT) throws SQLException {
         /*Copy and pasted from above becuase idk what else to put here*/
         sqlHandler sqlHandler = new sqlHandler();
-        sessionToken sT = new sessionToken();
         PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.generateReports());
         pstmnt.setString(1, String.valueOf(LocalDate.now()));
         ResultSet rs = pstmnt.executeQuery();
@@ -165,23 +177,45 @@ public class Launcher {
                 rowNum += 1;
             }
         }
+        /*1. make menu for the event. 2. make user input for event. 3. implement into db? */
+        int perms = i;
+        Scanner scan = new Scanner(System.in);
+        if (perms == 1) {
+            System.out.println("------Start Event------");
+            System.out.println("Where is the event happening?");
+            String location = scan.nextLine();
+            /*since this is date, could maybe connect to clock somehow?*/
+            System.out.print("What is the time/ when is the event happening? (Ex: date and time)");
+            String time = scan.nextLine();
+            /*add event into db? */
+            System.out.println("\n Event made.");
+            System.out.println("Location: " + location);
+            System.out.println("Time: " + time);
+        }
     }
-    public static void emergency() throws SQLException {
+
+    public static void emergency(int i, sessionToken sT) throws SQLException {
         /*Copy and pasted from above becuase idk what else to put here*/
         sqlHandler sqlHandler = new sqlHandler();
-        sessionToken sT = new sessionToken();
         PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.generateReports());
         pstmnt.setString(1, String.valueOf(LocalDate.now()));
         ResultSet rs = pstmnt.executeQuery();
         ResultSetMetaData rsmd = rs.getMetaData();
         int columnCount = rsmd.getColumnCount();
-        int rowNum = 0;
-        while (rs.next()) {
-            for (int i = 1; i < columnCount + 1; i++) {
-                String logString = rs.getString(i);
-                System.out.println(logString + ": ");
-                rowNum += 1;
-            }
+        /*1. make emergency menu (what, where). 2. get information from DB.
+         * 3. theoretically send information.  */
+        int perms = i;
+        Scanner scan = new Scanner(System.in);
+        if (perms == 1) {
+           System.out.println("------Emergency Report------");
+           System.out.println("Where is the emergency happening?");
+           String location = scan.nextLine();
+           /*since this is date, could maybe connect to clock somehow?*/
+           System.out.print("What is the time/ when is the emergency happening? (Ex: date and time)");
+           String time = scan.nextLine();
+           System.out.println("\n Emergency reported.");
+           System.out.println("Location: " + location);
+           System.out.println("Time: " + time);
         }
     }
 }
