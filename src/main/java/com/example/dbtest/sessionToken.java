@@ -3,16 +3,16 @@ package com.example.dbtest;
 public class sessionToken {
     private String consoleUsername;
     private String consolePassword;
-    private String consoleID;
+    private int consoleID;
     private String consoleEmail;
-    private String consolePermissions;
+    private int consolePermissions;
     public String getConsoleUsername() {
         return consoleUsername;
     }
     public String getConsolePassword() {
         return consolePassword;
     }
-    public String getConsoleUserID() {
+    public int getConsoleUserID() {
         return consoleID;
     }
     public void setConsoleUsername(String username) {
@@ -21,19 +21,19 @@ public class sessionToken {
     public void setConsoleUserPassword(String password) {
         consolePassword = password;
     }
-    public void setConsoleUserID(String ID) {
+    public void setConsoleUserID(int ID) {
         consoleID = ID;
     }
     public String getConsoleEmail() {
         return consoleUsername;
     }
-    public String getConsolePermissions() {
-        return consolePassword;
+    public int getConsolePermissions() {
+        return consolePermissions;
     }
     public void setConsoleEmail(String email) {
         consoleEmail = email;
     }
-    public void setConsoleUserPermissions(String permissions) {
+    public void setConsoleUserPermissions(int permissions) {
         consolePermissions = permissions;
     }
 }

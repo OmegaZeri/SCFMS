@@ -25,16 +25,19 @@ public class sqlHandler {
                     sqlPassword = scan.nextLine();
                 }
                 public String logsQuery (){
-                    return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where userID = 1003372";
+                    return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= date_sub(curdate(), interval 30 day) and userID = ?";
                 }
                 public String loginQuery () {
                     return "select email, password from users where email = ? AND password = ?";
                 }
                 public String welcomeQuery() {
-                    return "select userName from users where password = ?";
+                    return "select userName, userID from users where password = ?";
                 }
-                public String reportGen (){
+                public String generateReports (){
                     return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= ? - interval 30 day";
+                }
+                public String permsQuery(){
+                    return "select permissions from users where password = ?";
                 }
 
 }
