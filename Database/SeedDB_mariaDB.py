@@ -11,6 +11,7 @@ import mysql.connector
 
 #CONFIG
 NUM_RECORDS = 3000  # change this to generate more rows/Generate larger data set for better testing of performance and indexing
+NUM_GUEST_USERS = 250
 NUM_BUILDINGS = 8
 MIN_ROOMS_PER_BUILDING = 8
 MAX_ROOMS_PER_BUILDING = 16
@@ -43,10 +44,24 @@ CREATE TABLE IF NOT EXISTS buildings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
+GUEST_USERS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS guest_users (
+    userID INT NOT NULL PRIMARY KEY,
+    userName VARCHAR(100) NOT NULL,
+    Email VARCHAR(150) NOT NULL UNIQUE,
+    Password VARCHAR(100) NOT NULL,
+    PhoneNumber VARCHAR(25) NOT NULL,
+    Age INT,
+    Created DATETIME NOT NULL,
+    RevokeAccess DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+"""
+
 ROOMS_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS rooms (
     roomID INT NOT NULL,
     buildingID INT NOT NULL,
+    IsLocked BOOLEAN NOT NULL,
     PRIMARY KEY (roomID, buildingID),
     UNIQUE KEY uq_rooms_roomID (roomID),
     CONSTRAINT fk_rooms_building
@@ -77,9 +92,14 @@ INSERT INTO buildings (buildingID, buildingName)
 VALUES (%s, %s)
 """
 
+INSERT_GUEST_USERS_SQL = """
+INSERT INTO guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, `Revoke Access`)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+"""
+
 INSERT_ROOMS_SQL = """
-INSERT INTO rooms (roomID, buildingID)
-VALUES (%s, %s)
+INSERT INTO rooms (roomID, buildingID, IsLocked)
+VALUES (%s, %s, %s)
 """
 
 INSERT_LOGS_SQL = """
@@ -192,6 +212,37 @@ def build_users() -> list[tuple[int, str, str, str, str, str, int, int, object]]
     return users
 
 
+def build_guest_users() -> list[tuple[int, str, str, str, str, int, object, object]]:
+    guest_users = []
+    used_emails: set[str] = set()
+    used_user_ids: set[int] = set()
+
+    #Generate data
+    for _ in range(NUM_GUEST_USERS):
+        first = fake.first_name()
+        last = fake.last_name()
+        created = fake.date_time_this_year()
+
+        email = gen_unique_email(first, last, used_emails)
+        user_id = gen_unique_user_id(used_user_ids)
+        password = gen_password()
+        phone_number = gen_phone_number()
+        revoke_access = fake.date_time_between(start_date=created, end_date="+90d")
+
+        guest_users.append((
+            user_id,
+            f"{first} {last}",
+            email,
+            password,
+            phone_number,
+            random.randint(18, 75),
+            created,  # datetime object; mysql connector handles it
+            revoke_access,  # datetime object; mysql connector handles it
+        ))
+
+    return guest_users
+
+
 def build_buildings() -> list[tuple[int, str]]:
     building_names = [
         "Admin Hall",
@@ -206,7 +257,7 @@ def build_buildings() -> list[tuple[int, str]]:
     return [(index + 1, building_names[index]) for index in range(NUM_BUILDINGS)]
 
 
-def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int]]:
+def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int, bool]]:
     rooms = []
 
     for building_id, _ in buildings:
@@ -216,7 +267,8 @@ def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int]]:
 
         for _ in range(room_count):
             room_id = (building_id * 1000) + (floor * 100) + room_number
-            rooms.append((room_id, building_id))
+            is_locked = random.choice([True, False])
+            rooms.append((room_id, building_id, is_locked))
             room_number += 1
 
             if room_number > 15:
@@ -228,11 +280,11 @@ def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int]]:
 
 def build_logs(
     users: list[tuple[int, str, str, str, str, str, int, int, object]],
-    rooms: list[tuple[int, int]],
+    rooms: list[tuple[int, int, bool]],
 ) -> list[tuple[int, int, date]]:
     logs = []
     used_log_keys: set[tuple[int, int, date]] = set()
-    room_ids = [room_id for room_id, _ in rooms]
+    room_ids = [room_id for room_id, _, _ in rooms]
 
     for user_id, *_ in users:
         log_count = random.randint(1, MAX_LOGS_PER_USER)
@@ -274,20 +326,23 @@ def recreate_tables(cursor) -> None:
     # Drop children first so reseeding stays simple.
     cursor.execute("DROP TABLE IF EXISTS logs")
     cursor.execute("DROP TABLE IF EXISTS rooms")
+    cursor.execute("DROP TABLE IF EXISTS guest_users")
     cursor.execute("DROP TABLE IF EXISTS buildings")
     cursor.execute("DROP TABLE IF EXISTS users")
 
     # Create table
     cursor.execute(USERS_TABLE_SQL)
     cursor.execute(BUILDINGS_TABLE_SQL)
+    cursor.execute(GUEST_USERS_TABLE_SQL)
     cursor.execute(ROOMS_TABLE_SQL)
     cursor.execute(LOGS_TABLE_SQL)
 
 
-def insert_seed_data(cursor, users, buildings, rooms, logs) -> None:
+def insert_seed_data(cursor, users, guest_users, buildings, rooms, logs) -> None:
     # Insert in batch
     cursor.executemany(INSERT_USERS_SQL, users)
     cursor.executemany(INSERT_BUILDINGS_SQL, buildings)
+    cursor.executemany(INSERT_GUEST_USERS_SQL, guest_users)
     cursor.executemany(INSERT_ROOMS_SQL, rooms)
     cursor.executemany(INSERT_LOGS_SQL, logs)
 
@@ -297,6 +352,7 @@ def main() -> None:
     db_name = db_config["database"]
 
     users = build_users()
+    guest_users = build_guest_users()
     buildings = build_buildings()
     rooms = build_rooms(buildings)
     logs = build_logs(users, rooms)
@@ -307,7 +363,7 @@ def main() -> None:
     try:
         prepare_database(cursor, db_name)
         recreate_tables(cursor)
-        insert_seed_data(cursor, users, buildings, rooms, logs)
+        insert_seed_data(cursor, users, guest_users, buildings, rooms, logs)
         conn.commit()
     finally:
         cursor.close()
@@ -315,8 +371,8 @@ def main() -> None:
 
     print(
         f"Seeded MySQL database '{db_name}' with "
-        f"{len(users)} users, {len(buildings)} buildings, "
-        f"{len(rooms)} rooms, and {len(logs)} logs."
+        f"{len(users)} users, {len(guest_users)} guest users, "
+        f"{len(buildings)} buildings, {len(rooms)} rooms, and {len(logs)} logs."
     )
 
 
