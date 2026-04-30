@@ -176,6 +176,7 @@ public class Launcher {
             }
         }
         System.out.println(rowNum / 5);
+        menu(sT.getConsolePermissions(), sT);
     }
 
     public static void startEvent(sessionToken sT) throws SQLException {
@@ -193,6 +194,7 @@ public class Launcher {
             System.out.println("Location: " + location);
             System.out.println("Time: " + time);
         }
+        menu(sT.getConsolePermissions(), sT);
     }
 
     public static void emergency(sessionToken sT) throws SQLException {
@@ -210,5 +212,6 @@ public class Launcher {
            System.out.println("Location: " + location);
            System.out.println("Time: " + time);
         }
+        menu(sT.getConsolePermissions(), sT);
     }
 }
