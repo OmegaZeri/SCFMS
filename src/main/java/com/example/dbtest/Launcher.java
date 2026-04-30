@@ -1,8 +1,5 @@
 package com.example.dbtest;
-import com.example.dbtest.sqlHandler.*;
-import com.example.dbtest.sessionToken.*;
 
-import javax.xml.transform.Result;
 import java.util.Scanner;
 import java.sql.*;
 import java.time.*;
@@ -13,8 +10,6 @@ public class Launcher {
     public static void main(String[] args) throws SQLException {
         dbConnector();
         login();
-        //accessLogs();
-        //genReport();
     }
 
     //function to connect program to database
@@ -35,6 +30,8 @@ public class Launcher {
 
     //Undergrad login example:    sdaniels@example.edu
     //                            'h%(758KhdmL&'
+    //Security officer login example: jbarrett@example.edu
+    //                                'LD6i12QyMiN@'
     //login function for console
     public static void login() throws SQLException {
         Scanner scan = new Scanner(System.in);
@@ -89,7 +86,26 @@ public class Launcher {
         int perms = i;
         int choice;
         Scanner scan = new Scanner(System.in);
+        //Undergrad Menu Choices
         if (perms == 1) {
+            do {
+                System.out.println("------Example University Console------");
+                System.out.println("      ------1. Access Logs------      ");
+                System.out.println("       ------  2. Quit   ------      ");
+                choice = scan.nextInt();
+                switch (choice) {
+                    case 1:
+                        System.out.println("Pulling your logs for the last 30 days.");
+                        accessLogs(sT);
+                        break;
+                    case 2:
+                        System.out.println("Closing console...");
+                        System.exit(0);
+                    default:
+                        System.out.println("Invalid choice, try again?");
+                }
+            } while (choice != 2);
+        } else if (perms == 4) {
             do {
                 System.out.println("------Example University Console------");
                 System.out.println("      ------1. Access Logs------      ");
@@ -111,14 +127,15 @@ public class Launcher {
                         emergency(sT);
                         break;
                     case 4:
+                        System.out.println("Generating log report");
+                        genReport();
+                    case 5:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
-            } while (choice != 2);
-        } else if (perms == 4) {
-
+            } while (choice != 4);
         }
     }
 
@@ -161,26 +178,10 @@ public class Launcher {
         System.out.println(rowNum / 5);
     }
 
-    public static void startEvent(int i, sessionToken sT) throws SQLException {
-        /*Copy and pasted from above becuase idk what else to put here*/
-        sqlHandler sqlHandler = new sqlHandler();
-        PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.generateReports());
-        pstmnt.setString(1, String.valueOf(LocalDate.now()));
-        ResultSet rs = pstmnt.executeQuery();
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columnCount = rsmd.getColumnCount();
-        int rowNum = 0;
-        while (rs.next()) {
-            for (int i = 1; i < columnCount + 1; i++) {
-                String logString = rs.getString(i);
-                System.out.println(logString + ": ");
-                rowNum += 1;
-            }
-        }
+    public static void startEvent(sessionToken sT) throws SQLException {
         /*1. make menu for the event. 2. make user input for event. 3. implement into db? */
-        int perms = i;
         Scanner scan = new Scanner(System.in);
-        if (perms == 1) {
+        if (sT.getConsolePermissions() == 4) {
             System.out.println("------Start Event------");
             System.out.println("Where is the event happening?");
             String location = scan.nextLine();
@@ -194,19 +195,11 @@ public class Launcher {
         }
     }
 
-    public static void emergency(int i, sessionToken sT) throws SQLException {
-        /*Copy and pasted from above becuase idk what else to put here*/
-        sqlHandler sqlHandler = new sqlHandler();
-        PreparedStatement pstmnt = conn.prepareStatement(sqlHandler.generateReports());
-        pstmnt.setString(1, String.valueOf(LocalDate.now()));
-        ResultSet rs = pstmnt.executeQuery();
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columnCount = rsmd.getColumnCount();
+    public static void emergency(sessionToken sT) throws SQLException {
         /*1. make emergency menu (what, where). 2. get information from DB.
          * 3. theoretically send information.  */
-        int perms = i;
         Scanner scan = new Scanner(System.in);
-        if (perms == 1) {
+        if (sT.getConsolePermissions() == 4) {
            System.out.println("------Emergency Report------");
            System.out.println("Where is the emergency happening?");
            String location = scan.nextLine();
