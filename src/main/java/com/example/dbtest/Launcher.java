@@ -1,6 +1,5 @@
 package com.example.dbtest;
 
-import java.lang.classfile.instruction.ExceptionCatch;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.sql.*;
@@ -19,25 +18,31 @@ public class Launcher {
     public static void dbConnector() throws SQLException {
         Scanner scan = new Scanner(System.in);
         sqlHandler sql = new sqlHandler();
+        String user = "";
+        boolean isValidUsername = false;
         System.out.println("Please enter DB Credentials");
-        sql.setSqlUser();
-        String user = sql.getSqlUser();
-        boolean inputCheck= user.matches("^[a-zA-Z0-9]*$");
-        if(inputCheck){
-            System.out.println("Valid input");
+        while(!isValidUsername){
+            sql.setSqlUser();
+            user = sql.getSqlUser();
+            if(user != null && user.matches("^[a-zA-Z0-9]*$")){
+                System.out.println("Valid input");
+                isValidUsername =true;
+            }
+            else{
+                System.out.println("Invalid Username.");
+            }
         }
-        else{dbConnector();}
         sql.setSqlPassword();
         String password = sql.getSqlPassword();
         String connection = sql.getSqlConnection();
         conn = DriverManager.getConnection(connection, user, password);
-        if (conn.isValid(300)) {
+        if (conn != null && conn.isValid(300)) {
             System.out.println("Connection Established");
         }
     }
 
     //Undergrad login example:    ctullis@example.edu
-    //
+    //                            y2T099Iv7fQ
     //Security officer login example: jbarrett@example.edu
     //                                LD6i12QyMiN@
     //login function for console
@@ -153,7 +158,8 @@ public class Launcher {
                 System.out.println("   ------4. Generate Reports------       ");
                 System.out.println("      ------5. Create User------       ");
                 System.out.println("      ------6. Guest User------       ");
-                System.out.println("       ------  7. Quit   ------      ");
+                System.out.println("  ------7. Change Permissions------       ");
+                System.out.println("       ------  8. Quit   ------      ");
                 try {
                     choice = scan.nextInt();
                 }catch(InputMismatchException e){
@@ -184,12 +190,15 @@ public class Launcher {
                         System.out.println("Redirecting to guest user creation menu");
                         guestUser(sT);
                     case 7:
+                        System.out.println("Opening user editor");
+                        changePermissions(sT);
+                    case 8:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
-            } while (choice != 7);
+            } while (choice != 8);
         }
     }
 
@@ -859,18 +868,77 @@ public class Launcher {
             }
         } while (choice != 10);
 }
-//    public static String changePermissions(sessionToken sT) throws SQLException{
-//        System.out.println("Change user permissions:");
-//        Scanner scan = new Scanner(System.in);
-//        System.out.println("Input new user's permissions");
-//        try {
-//            int permissions = scan.nextInt();
-//        }
-//        catch(InputMismatchException e){
-//            System.out.println("Invalid input");
-//            return changePermissions(sT);
-//        }
-//    }
+    public static void changePermissions(sessionToken sT) throws SQLException {
+        int permissions = permissionsGetter(sT);
+        String classifications = "";
+        String passwordInput = "";
+        Scanner scan = new Scanner(System.in);
+        sqlHandler sql = new sqlHandler();
+        boolean userFound = false;
+        while (!userFound){
+            System.out.println("Enter user's password associated with the account you want to edit, or type exit to close");
+            passwordInput = scan.nextLine();
+            if (passwordInput.equalsIgnoreCase("exit")){menu(permissions, sT);}
+            try(PreparedStatement reqPermsPstmnt = conn.prepareStatement(sql.requestPermissionsQuery())){
+                reqPermsPstmnt.setString(1,passwordInput);
+                try (ResultSet reqPermsRS = reqPermsPstmnt.executeQuery()){
+                    if (reqPermsRS.next()){
+                        System.out.println(reqPermsRS.getString(1) + "'s " + "classification is: " + reqPermsRS.getString(2) + " and their permissions are: " + reqPermsRS.getString(3));
+                        userFound=true;
+                    }
+                    else {
+                        System.out.println("User was not found with that password.");
+                    }
+                }
+            }
+        }
+        if(userFound){
+            if(permissions ==1){
+                classifications ="undergrad";
+            }
+            else if (permissions==2){
+                classifications ="grad";
+            }
+            else if(permissions==3){
+                classifications = "faculty";
+            }
+            else if (permissions==34){
+                classifications ="security officer";
+            }
+            else if (permissions >4 || permissions < 1){
+                System.out.println("Invalid Permissions");
+                return;
+            }
+            try(PreparedStatement changeUserPermsPstmnt = conn.prepareStatement(sql.changeUserPermissionsQuery())){
+                changeUserPermsPstmnt.setString(1, classifications);
+                changeUserPermsPstmnt.setInt(2, permissions);
+                changeUserPermsPstmnt.setString(3, passwordInput);
+                if(changeUserPermsPstmnt.executeUpdate()==1){
+                    System.out.println("User's permission and classification have been updated");
+                    System.out.println("User's new classification is: " + classifications + " and their permissions are: " + permissions);
+                    menu(sT.getConsolePermissions(), sT);
+                }
+                else{
+                    System.out.println("User was not updated");
+                    menu(sT.getConsolePermissions(), sT);
+                }
+            }
+        }
+    }
+    public static int permissionsGetter(sessionToken sT) throws SQLException{
+        System.out.println("Change user permissions:");
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Input new user's permissions");
+        int newPermissions = 0;
+        try {
+            newPermissions = scan.nextInt();
+        }
+        catch(InputMismatchException e){
+            System.out.println("Invalid input");
+            return permissionsGetter(sT);
+        }
+        return newPermissions;
+    }
     public static boolean twoFactorCode(sessionToken sT){
         int twofactAttempts = 0;
         boolean auth = false;

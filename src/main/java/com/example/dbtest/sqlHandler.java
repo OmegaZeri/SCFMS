@@ -47,4 +47,6 @@ public class sqlHandler {
                 public String newUserCreationQuery(){return "insert into users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";}
                 public String newGuestUserCreationQuery(){return "insert into guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, revokeAccess) values (?, ?, ?, ?, ?, ?, ?, ?)";}
                 public String newUserVerificationQuery(){return "select userName, UserID, password from users where password =?";}
+                public String requestPermissionsQuery(){return "select username, classification, permissions from users where password = ?";}
+                public String changeUserPermissionsQuery(){return "update users set classification = ?, permissions = ? where password = ?";}
 }
