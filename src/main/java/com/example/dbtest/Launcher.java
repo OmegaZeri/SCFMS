@@ -46,7 +46,7 @@ public class Launcher {
     }
 
     //Undergrad login example:    ctullis@example.edu
-    //                            *0MSf5za3G$
+    //                            @9c$8$&3niZ
     //Security officer login example: jbarrett@example.edu
     //                                LD6i12QyMiN@
     //login function for console
@@ -67,6 +67,7 @@ public class Launcher {
                 try (ResultSet rs = loginPstmnt.executeQuery()) {
                     if (rs.next()) {
                         resultsFound = true;
+                        System.out.println("Login Successful");
                         sT.setConsoleUsername(username);
                         sT.setConsoleUserPassword(password);
                         ResultSetMetaData rsmd = rs.getMetaData();
@@ -112,18 +113,15 @@ public class Launcher {
                             }
                         }
                     }
+                    else {
+                        accessAttempt ++;
+                        System.out.println("Invalid login info, try again.");
+                    }
                 }
             }
         }
-        if (!resultsFound) {
-            accessAttempt += 1;
-            System.out.println("Invalid login info, try again.");
-            login();
-        }
-        if (accessAttempt == 3) {
-            System.out.println("You have failed to login 3 times, client will now shutdown");
-            System.exit(0);
-        }
+        System.out.println("You have failed to login 3 times, client will now shutdown");
+        System.exit(0);
     }
     public static void menu(int i, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         int perms = i;

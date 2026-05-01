@@ -25,7 +25,7 @@ public class sqlHandler {
                     sqlPassword = scan.nextLine();
                 }
                 public String logsQuery (){
-                    return "select username, userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= date_sub(curdate(), interval 30 day) and userID = ?";
+                    return "select username, users.userID, logs.roomID, logDate, rooms.BuildingID, buildingName from users inner join logs on users.userID = logs.userID inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= date_sub(curdate(), interval 30 day) and users.userID = ?";
                 }
                 public String loginQuery () {return "select email, password from users where email = ? AND password = ?";}
                 public String welcomeQuery() {return "select userName, userID from users where password = ?";}
