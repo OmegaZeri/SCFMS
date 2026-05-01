@@ -36,4 +36,10 @@ public class sqlHandler {
                     return "select permissions from users where password = ?";
                 }
                 public String phoneNumberQuery(){return "select phoneNumber from users where password = ?";}
+                public String userIDMaxQuery(){return "select max(userID) from users";}
+                public String userNameQuery(){return "select userID from users where userID =? order by userID desc limit 1";}
+                public String userPasswordQuery(){return "select password from users where password = ?";}
+                public String userPhoneNumberQuery(){return "select phonenumber from users where phonenumber = ?";}
+                public String newUserCreationQuery(){return "insert into users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";}
+                public String newUserVerificationQuery(){return "select userName, UserID, password from users where password =?";}
 }
