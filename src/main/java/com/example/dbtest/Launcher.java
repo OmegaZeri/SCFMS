@@ -49,10 +49,6 @@ public class Launcher {
     //Username: ctullis, Email: ctullis@example.edu, Password: securityex
     //Username: wwiesman, Email: wwiesman@example.edu, Password: undergradex
     //Username: jhutto, Email: jhutto@example.edu, Password: facultyex
-    //Undergrad login example:    ctullis@example.edu
-    //                            @9c$8$&3niZ
-    //Security officer login example: jbarrett@example.edu
-    //                                LD6i12QyMiN@
     //login function for console
     public static void login() throws SQLException {
         Scanner scan = new Scanner(System.in);
@@ -161,11 +157,13 @@ public class Launcher {
                 System.out.println("      ------1. Access Logs------      ");
                 System.out.println("       ------2. Start Event------     ");
                 System.out.println("       ------3. Emergency------       ");
-                System.out.println("   ------4. Generate Reports------       ");
-                System.out.println("      ------5. Create User------       ");
-                System.out.println("      ------6. Guest User------       ");
-                System.out.println("  ------7. Change Permissions------       ");
-                System.out.println("       ------  8. Quit   ------      ");
+                System.out.println("    ------4. Security Alert ------    ");
+                System.out.println("   ------5. Generate Reports------       ");
+                System.out.println("      ------6. Create User------       ");
+                System.out.println("      ------7. Guest User------       ");
+                System.out.println("  ------8. Change Permissions------       ");
+                System.out.println("    ------9. Request Access------       ");
+                System.out.println("       ------  10. Quit   ------      ");
                 try {
                     choice = scan.nextInt();
                 }catch(InputMismatchException e){
@@ -187,24 +185,33 @@ public class Launcher {
                         emergency(sT);
                         break;
                     case 4:
+                        System.out.println("Redirecting to security alert menu");
+                    case 5:
                         System.out.println("Generating log report");
                         genReport(sT);
-                    case 5:
+                        break;
+                    case 6:
                         System.out.println("Redirecting to user creation menu");
                         createUser(sT);
-                    case 6:
+                        break;
+                    case 7:
                         System.out.println("Redirecting to guest user creation menu");
                         guestUser(sT);
-                    case 7:
+                        break;
+                    case 8:
                         System.out.println("Opening user editor");
                         changePermissions(sT);
-                    case 8:
+                        break;
+                    case 9:
+                        System.out.println("Requesting access");
+                        break;
+                    case 10:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
-            } while (choice != 8);
+            } while (choice != 9);
         }
     }
 
