@@ -37,9 +37,14 @@ public class sqlHandler {
                 }
                 public String phoneNumberQuery(){return "select phoneNumber from users where password = ?";}
                 public String userIDMaxQuery(){return "select max(userID) from users";}
+                public String guestUserIDMaxQuery(){return "select max(userID) from guest_users";}
                 public String userNameQuery(){return "select userID from users where userID =? order by userID desc limit 1";}
+                public String guestUserNameQuery(){return "select userID from guest_users where userID =? order by userID desc limit 1";}
                 public String userPasswordQuery(){return "select password from users where password = ?";}
+                public String guestUserPasswordQuery(){return "select password from guest_users where password = ?";}
                 public String userPhoneNumberQuery(){return "select phonenumber from users where phonenumber = ?";}
+                public String guestPhoneNumberQuery(){return "select phoneNumber from guest_users where phonenumber = ?";}
                 public String newUserCreationQuery(){return "insert into users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";}
+                public String newGuestUserCreationQuery(){return "insert into guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, revokeAccess) values (?, ?, ?, ?, ?, ?, ?, ?)";}
                 public String newUserVerificationQuery(){return "select userName, UserID, password from users where password =?";}
 }

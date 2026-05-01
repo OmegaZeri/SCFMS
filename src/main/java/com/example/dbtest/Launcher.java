@@ -141,7 +141,8 @@ public class Launcher {
                 System.out.println("       ------3. Emergency------       ");
                 System.out.println("   ------4. Generate Reports------       ");
                 System.out.println("      ------5. Create User------       ");
-                System.out.println("       ------  6. Quit   ------      ");
+                System.out.println("      ------6. Guest User------       ");
+                System.out.println("       ------  7. Quit   ------      ");
                 choice = scan.nextInt();
                 switch (choice) {
                     case 1:
@@ -163,12 +164,15 @@ public class Launcher {
                         System.out.println("Redirecting to user creation menu");
                         createUser(sT);
                     case 6:
+                        System.out.println("Redirecting to guest user creation menu");
+                        guestUser(sT);
+                    case 7:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
-            } while (choice != 6);
+            } while (choice != 7);
         }
     }
 
@@ -292,6 +296,20 @@ public class Launcher {
             sqlHandler sql = new sqlHandler();
             int choice =0;
             createUserMenu(choice, sT);
+            //Recalls menufunction
+            menu(sT.getConsolePermissions(), sT);
+        }
+        else{
+            System.out.println("Closing Console");
+            System.exit(0);
+        }
+    }
+    public static void guestUser(sessionToken sT) throws SQLException{
+        if(twoFactorCode(sT)) {
+            System.out.println("Guest User Creation Menu: " + "\nPlease pay attention to formatting");
+            sqlHandler sql = new sqlHandler();
+            int choice =0;
+            guestUserMenu(choice, sT);
             //Recalls menufunction
             menu(sT.getConsolePermissions(), sT);
         }
@@ -563,6 +581,227 @@ public class Launcher {
             }
         } while (choice != 11);
     }
+    public static void guestUserMenu(int choiceIn, sessionToken sT) throws SQLException{
+        int choice = choiceIn;
+        sqlHandler sql = new sqlHandler();
+        int newUserID =0;
+        boolean uniqueName=false;
+        String newUsername = "null";
+        String newUserEmail ="null";
+        String newUserPassword= "null";
+        String newUserPhonenumber= "null";
+        int newUserAge=0;
+        LocalDateTime newUserCreationDate = LocalDateTime.of(2000,1,1,0,0);
+        LocalDateTime newUserRevokeDate = LocalDateTime.of(2000,1,1,0,0);
+            do {
+            Scanner scan = new Scanner(System.in);
+            System.out.println("       ------Create User------     ");
+            System.out.println("        ------1. UserID------      ");
+            System.out.println("       ------2. UserName------     ");
+            System.out.println("        ------3. Email ------       ");
+            System.out.println("       ------4. Password------       ");
+            System.out.println("     ------5. Phone number------      ");
+            System.out.println("         ------6. Age ------        ");
+            System.out.println("    ------ 7. Date Created ------   ");
+            System.out.println("    ------ 8. Revoke Date ------   ");
+            System.out.println("  ------ 9. Finish Creation ------  ");
+            System.out.println(" ------ 10. Exit User Creation------ ");
+            try{
+                choice = scan.nextInt();
+            }catch (InputMismatchException e){
+                System.out.println("Not a numerical choice");
+                scan.next();
+                guestUserMenu(choice,sT);
+            }
+            boolean emailUnique=false;
+            switch (choice) {
+                case 1:
+                    //Input UserID function
+                    try (PreparedStatement userIDMaxPstmnt = conn.prepareStatement(sql.guestUserIDMaxQuery())) {
+                        try (ResultSet userIDMaxRS = userIDMaxPstmnt.executeQuery()) {
+                            if (userIDMaxRS.next()) {
+                                int maxStudentID = userIDMaxRS.getInt(1);
+                                System.out.println("The largest userID currently existing is: " + maxStudentID);
+                                System.out.println("Entering " + (maxStudentID + 1) + " into new user's ID field");
+                                newUserID = (maxStudentID+1);
+                            }
+                        }
+                    }
+                    break;
+                case 2:
+                    //Input Username function
+                    System.out.println("Input name of user: ");
+                    String newUsernameFirst, newUsernameLast;
+                    try (PreparedStatement userNamePstmnt = conn.prepareStatement(sql.guestUserNameQuery())) {
+                        scan.nextLine();
+                        System.out.println("First name:");
+                        newUsernameFirst = scan.nextLine();
+                        System.out.println("Last name:");
+                        newUsernameLast = scan.nextLine();
+                        sT.setNewUserLast(newUsernameLast);
+                        newUsername = String.join(" ", newUsernameFirst, newUsernameLast);
+                        sT.setNewUsername(newUsername);
+                        userNamePstmnt.setString(1, newUsername);
+                        try (ResultSet userNameRS = userNamePstmnt.executeQuery()) {
+                            if (!userNameRS.next()) {
+                                System.out.println("There does not exist a user with that name, email will be unique.");
+                                uniqueName=true;
+                            }
+                            else {
+                                System.out.println("There exists a user with that name, email will have to contain unique numbers.");
+                            }
+                        }
+                    }
+                    break;
+                case 3:
+                    //Email creation function
+                    if(sT.getNewUsername()==null){
+                        System.out.println("Enter Username first before creating user email.");
+                        break;
+                    }
+                    else{
+                        System.out.println("Email creation:");
+                        String firstLetterFirstName = String.valueOf(sT.getNewUsername().toLowerCase().charAt(0));
+                        String fullLastName = sT.getNewUsernameLast().toLowerCase();
+                        if(uniqueName){
+                            newUserEmail = firstLetterFirstName + fullLastName + "@example.edu";
+                            System.out.println("Email to be inputted is: " + newUserEmail);
+                        }
+                        else{
+                            Random emailRand = new Random();
+                            int emailNum = emailRand.nextInt(130000);
+                            if (emailNum < 100000) {emailNum += 100000;}
+                            String emailNumString = String.valueOf(emailNum);
+                            newUserEmail = firstLetterFirstName + fullLastName + emailNumString + "@example.edu";
+                            System.out.println("Email to be inputted is: " + newUserEmail);
+                        }
+                    }
+                    break;
+                case 4:
+                    //Input password function
+                    newUserPassword = newGuestUserPasswordGeneration(sT, sql);
+                    break;
+                case 5:
+                    //
+                    System.out.println("Enter new user's phone number");
+                    newUserPhonenumber = newGuestUserPhoneNumberGeneration(sT, sql);
+                    break;
+                case 6:
+                    scan.nextLine();
+                    newUserAge = newGuestUserAgeGetter(newUserAge);
+                    break;
+                case 7:
+                    System.out.println("Getting creation time and date");
+                    LocalDateTime created = LocalDateTime.now();
+                    DateTimeFormatter sqlFormatting = DateTimeFormatter.ofPattern(("yyyy-MM-dd HH:mm:ss"));
+                    newUserCreationDate = LocalDateTime.parse(created.format(sqlFormatting), sqlFormatting);
+                    break;
+                case 8:
+                    System.out.println("Getting revoke time and date");
+                    System.out.println("1. Revoke in 1 day");
+                    System.out.println("1. Revoke in 1 week");
+                    System.out.println("1. Revoke in 1 month");
+                    int revChoice=scan.nextInt();
+                    switch(revChoice){
+                        case 1:
+                            newUserRevokeDate = LocalDateTime.now().plusDays(1);
+                            break;
+                        case 2:
+                            newUserRevokeDate = LocalDateTime.now().plusWeeks(1);
+                            break;
+                        case 3:
+                            newUserRevokeDate = LocalDateTime.now().plusMonths(1);
+                            break;
+                        default:
+                            System.out.println("Invalid choice, revoke date not set");
+                    }
+                    sqlFormatting = DateTimeFormatter.ofPattern(("yyyy-MM-dd HH:mm:ss"));
+                    newUserRevokeDate = LocalDateTime.parse(newUserRevokeDate.format(sqlFormatting), sqlFormatting);
+                    System.out.println("Guest access end date set to: " + newUserRevokeDate);
+                    break;
+                case 9:
+                    System.out.println("Creating New User");
+                    try(PreparedStatement userCreatePstmnt = conn.prepareStatement(sql.newGuestUserCreationQuery())){
+                        if(newUserID==0){
+                            System.out.println("User does not have an ID");
+                            guestUserMenu(choice, sT);
+                        }
+                        else{
+                            userCreatePstmnt.setInt(1,newUserID);
+                            if(newUsername.equals(null)){
+                                System.out.println("User does not have a name");
+                                guestUserMenu(choice, sT);
+                            }
+                            else{
+                                userCreatePstmnt.setString(2,newUsername);
+                                if(newUserEmail.equals(null)){
+                                    System.out.println("User does not have an email");
+                                    guestUserMenu(choice, sT);
+                                }
+                                else{
+                                    userCreatePstmnt.setString(3,newUserEmail);
+                                    if(newUserPassword.equals(null)){
+                                        System.out.println("User does not have a password");
+                                        guestUserMenu(choice, sT);
+                                    }
+                                    else{
+                                        userCreatePstmnt.setString(4,newUserPassword);
+                                        if(newUserPhonenumber.equals(null)){
+                                            System.out.println("User does not have a phone number");
+                                            guestUserMenu(choice, sT);
+                                        }
+                                        else{
+                                            userCreatePstmnt.setString(5,newUserPassword);
+                                            if(newUserAge==0){
+                                                System.out.println("User does not have their age set");
+                                                guestUserMenu(choice, sT);
+                                            }
+                                            else{
+                                                userCreatePstmnt.setInt(6, newUserAge);
+                                                if(Objects.equals(newUserCreationDate, LocalDateTime.of(2000, 1, 1, 0, 0))){
+                                                    System.out.println("User does not have their creation date set");
+                                                    guestUserMenu(choice, sT);
+                                                }
+                                                else{
+                                                    userCreatePstmnt.setString(7,String.valueOf(newUserCreationDate));
+                                                    if(Objects.equals(newUserRevokeDate, LocalDateTime.of(2000, 1, 1, 0, 0))){
+                                                        System.out.println("User's access end date has not been set");
+                                                        guestUserMenu(choice, sT);
+                                                    }
+                                                    else{
+                                                        userCreatePstmnt.setString(8, String.valueOf(newUserRevokeDate));
+                                                    }
+                                                    System.out.println("User info has been accepted, creating...");
+                                                    boolean userCreated=false;
+                                                    if(userCreatePstmnt.executeUpdate()==1){
+                                                        userCreated=true;
+                                                        System.out.println("User has been created");
+                                                        menu(sT.getConsolePermissions(), sT);
+                                                    }
+                                                    else{
+                                                        System.out.println("User was not created");
+                                                        menu(sT.getConsolePermissions(), sT);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                    break;
+                case 11:
+                    System.out.println("Closing user creator");
+                    menu(sT.getConsolePermissions(), sT);
+                default:
+                    System.out.println("Invalid choice, try again?");
+            }
+        } while (choice != 10);
+}
+
+
     public static boolean twoFactorCode(sessionToken sT){
         int twofactAttempts = 0;
         Scanner phoneScan = new Scanner(System.in);
@@ -608,6 +847,27 @@ public class Launcher {
         }
         else{return null;}
     }
+    public static String newGuestUserPasswordGeneration (sessionToken sT, sqlHandler sqlIn)throws SQLException {
+        System.out.println("Password created");
+        Faker passwordFaker = new Faker();
+        boolean passwordGenerated=false;
+        String newUserPassword = passwordFaker.internet().password(12,13,true,true,true);
+        newUserPassword = newUserPassword.substring(1);
+        try(PreparedStatement passwordPstmnt = conn.prepareStatement(sqlIn.guestUserPasswordQuery())){
+            passwordPstmnt.setString(1,newUserPassword);
+            try(ResultSet passwordRS = passwordPstmnt.executeQuery()){
+                if(passwordRS.next()){
+                    System.out.println("Password already exists, retrying");
+                    newGuestUserPasswordGeneration(sT,sqlIn);
+                }
+                else{passwordGenerated = true;}
+            }
+        }
+        if(passwordGenerated){
+            return newUserPassword;
+        }
+        else{return null;}
+    }
     public static String newUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn) throws SQLException {
         System.out.println("Phone Number Applied");
         Faker phoneFaker = new Faker();
@@ -628,7 +888,37 @@ public class Launcher {
         }
         else{return null;}
     }
+    public static String newGuestUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn) throws SQLException {
+        System.out.println("Phone Number Applied");
+        Faker phoneFaker = new Faker();
+        boolean phoneNumberGenerated = false;
+        String newUserPhoneNumber = phoneFaker.phoneNumber().phoneNumber();
+        try (PreparedStatement phoneNumberPstmnt = conn.prepareStatement(sqlIn.guestPhoneNumberQuery())) {
+            phoneNumberPstmnt.setString(1, newUserPhoneNumber);
+            try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
+                if (phoneRS.next()) {
+                    newGuestUserPhoneNumberGeneration(sT, sqlIn);
+                }
+                else{ phoneNumberGenerated=true;}
+            }
+
+        }
+        if(phoneNumberGenerated){
+            return newUserPhoneNumber;
+        }
+        else{return null;}
+    }
     public static int newUserAgeGetter(int newUserAge){
+        System.out.println("Enter new user's age");
+        Scanner scan = new Scanner(System.in);
+        newUserAge = scan.nextInt();
+        scan.nextLine();
+        if(newUserAge > 99 && newUserAge < 1) {System.out.println("There's no way, re enter age");
+            newUserAge = 0;
+        }
+        return newUserAge;
+    }
+    public static int newGuestUserAgeGetter(int newUserAge){
         System.out.println("Enter new user's age");
         Scanner scan = new Scanner(System.in);
         newUserAge = scan.nextInt();
