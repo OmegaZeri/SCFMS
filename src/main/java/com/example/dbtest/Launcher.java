@@ -45,6 +45,10 @@ public class Launcher {
         }
     }
 
+    //Hard coded users:
+    //Username: ctullis, Email: ctullis@example.edu, Password: securityex
+    //Username: wwiesman, Email: wwiesman@example.edu, Password: undergradex
+    //Username: jhutto, Email: jhutto@example.edu, Password: facultyex
     //Undergrad login example:    ctullis@example.edu
     //                            @9c$8$&3niZ
     //Security officer login example: jbarrett@example.edu

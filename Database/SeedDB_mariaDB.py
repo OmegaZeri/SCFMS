@@ -23,6 +23,11 @@ CLASSIFICATION_PERMISSIONS = {
     "faculty": 3,
     "security officer": 4,
 }
+HARDCODED_USERS = [
+    ("Camden Tullis", "ctullis@example.edu", "securityex", "security officer", 4, 20),
+    ("William Wiesman", "wwiesman@example.edu", "undergradex", "undergrad", 1, 21),
+    ("Jacob Hutto", "jhutto@example.edu", "facultyex", "faculty", 3, 21),
+]
 
 USERS_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS users (
@@ -63,8 +68,11 @@ CREATE TABLE IF NOT EXISTS rooms (
     roomID INT NOT NULL,
     buildingID INT NOT NULL,
     IsLocked BOOLEAN NOT NULL,
+    PrivilegeRequired INT NOT NULL,
     PRIMARY KEY (roomID, buildingID),
     UNIQUE KEY uq_rooms_roomID (roomID),
+    CONSTRAINT chk_rooms_privilege_required
+        CHECK (PrivilegeRequired BETWEEN 1 AND 4),
     CONSTRAINT fk_rooms_building
         FOREIGN KEY (buildingID) REFERENCES buildings(buildingID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -99,8 +107,8 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 """
 
 INSERT_ROOMS_SQL = """
-INSERT INTO rooms (roomID, buildingID, IsLocked)
-VALUES (%s, %s, %s)
+INSERT INTO rooms (roomID, buildingID, IsLocked, PrivilegeRequired)
+VALUES (%s, %s, %s, %s)
 """
 
 INSERT_LOGS_SQL = """
@@ -186,6 +194,21 @@ def build_users() -> list[tuple[int, str, str, str, str, str, int, int, object]]
     used_emails: set[str] = set()
     used_user_ids: set[int] = set()
 
+    #Add hard coded example accounts first
+    for name, email, password, classification, permissions, age in HARDCODED_USERS:
+        users.append((
+            gen_unique_user_id(used_user_ids),
+            name,
+            email,
+            password,
+            gen_phone_number(),
+            classification,
+            permissions,
+            age,
+            fake.date_time_this_decade(),  # datetime object; mysql connector handles it
+        ))
+        used_emails.add(email)
+
     #Generate data
     for _ in range(NUM_RECORDS):
         first = fake.first_name()
@@ -257,18 +280,45 @@ def build_buildings() -> list[tuple[int, str]]:
     return [(index + 1, building_names[index]) for index in range(NUM_BUILDINGS)]
 
 
-def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int, bool]]:
+def build_privilege_levels(room_count: int) -> list[int]:
+    #Set 2-3 rooms per building to the highest privilege level
+    level_4_count = random.randint(2, min(3, room_count))
+    remaining_count = room_count - level_4_count
+
+    #Some rooms need higher privileges, but most stay level 1
+    level_3_count = max(1, round(remaining_count * 0.15))
+    level_2_count = max(1, round(remaining_count * 0.25))
+
+    if level_2_count + level_3_count > remaining_count:
+        level_3_count = min(level_3_count, remaining_count)
+        level_2_count = max(0, remaining_count - level_3_count)
+
+    level_1_count = remaining_count - level_2_count - level_3_count
+    privilege_levels = (
+        ([1] * level_1_count)
+        + ([2] * level_2_count)
+        + ([3] * level_3_count)
+        + ([4] * level_4_count)
+    )
+    #Shuffle so high privilege rooms are not always at the end
+    random.shuffle(privilege_levels)
+    return privilege_levels
+
+
+def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int, bool, int]]:
     rooms = []
 
     for building_id, _ in buildings:
         room_count = random.randint(MIN_ROOMS_PER_BUILDING, MAX_ROOMS_PER_BUILDING)
+        #Generate privilege required for each room in the building
+        privilege_levels = build_privilege_levels(room_count)
         floor = 1
         room_number = 1
 
-        for _ in range(room_count):
+        for privilege_required in privilege_levels:
             room_id = (building_id * 1000) + (floor * 100) + room_number
             is_locked = random.choice([True, False])
-            rooms.append((room_id, building_id, is_locked))
+            rooms.append((room_id, building_id, is_locked, privilege_required))
             room_number += 1
 
             if room_number > 15:
@@ -280,11 +330,11 @@ def build_rooms(buildings: list[tuple[int, str]]) -> list[tuple[int, int, bool]]
 
 def build_logs(
     users: list[tuple[int, str, str, str, str, str, int, int, object]],
-    rooms: list[tuple[int, int, bool]],
+    rooms: list[tuple[int, int, bool, int]],
 ) -> list[tuple[int, int, date]]:
     logs = []
     used_log_keys: set[tuple[int, int, date]] = set()
-    room_ids = [room_id for room_id, _, _ in rooms]
+    room_ids = [room_id for room_id, *_ in rooms]
 
     for user_id, *_ in users:
         log_count = random.randint(1, MAX_LOGS_PER_USER)

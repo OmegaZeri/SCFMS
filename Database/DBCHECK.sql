@@ -19,4 +19,8 @@ SELECT * FROM rooms LIMIT 10;
 SELECT IsLocked, COUNT(*) AS total
 FROM rooms
 GROUP BY IsLocked;
+SELECT buildingID, PrivilegeRequired, COUNT(*) AS total
+FROM rooms
+GROUP BY buildingID, PrivilegeRequired
+ORDER BY buildingID, PrivilegeRequired;
 SELECT * FROM logs;
