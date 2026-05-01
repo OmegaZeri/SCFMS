@@ -25,12 +25,12 @@ public class sqlHandler {
                     sqlPassword = scan.nextLine();
                 }
                 public String logsQuery (){
-                    return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= date_sub(curdate(), interval 30 day) and userID = ?";
+                    return "select username, userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= date_sub(curdate(), interval 30 day) and userID = ?";
                 }
                 public String loginQuery () {return "select email, password from users where email = ? AND password = ?";}
                 public String welcomeQuery() {return "select userName, userID from users where password = ?";}
                 public String generateReports (){
-                    return "select userID, logs.roomID, logDate, rooms.BuildingID, buildingName from logs inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= ? - interval 30 day";
+                    return "select username, users.userID, logs.roomID, logDate, rooms.BuildingID, buildingName from users inner join logs on users.userID = logs.userID inner join rooms on logs.roomID = rooms.roomID inner join buildings on rooms.buildingID = buildings.buildingID where logDate >= ? - interval 30 day";
                 }
                 public String permsQuery(){
                     return "select permissions from users where password = ?";
@@ -46,7 +46,6 @@ public class sqlHandler {
                 public String guestPhoneNumberQuery(){return "select phoneNumber from guest_users where phonenumber = ?";}
                 public String newUserCreationQuery(){return "insert into users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";}
                 public String newGuestUserCreationQuery(){return "insert into guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, revokeAccess) values (?, ?, ?, ?, ?, ?, ?, ?)";}
-                public String newUserVerificationQuery(){return "select userName, UserID, password from users where password =?";}
                 public String requestPermissionsQuery(){return "select username, classification, permissions from users where password = ?";}
                 public String changeUserPermissionsQuery(){return "update users set classification = ?, permissions = ? where password = ?";}
 }

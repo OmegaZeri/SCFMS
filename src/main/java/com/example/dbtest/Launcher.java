@@ -1,10 +1,14 @@
 package com.example.dbtest;
 
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.sql.*;
 import java.time.*;
 import com.github.javafaker.*;
+import javax.crypto.*;
 public class Launcher {
     static Connection conn;
     static int accessAttempt;
@@ -42,86 +46,86 @@ public class Launcher {
     }
 
     //Undergrad login example:    ctullis@example.edu
-    //                            y2T099Iv7fQ
+    //                            *0MSf5za3G$
     //Security officer login example: jbarrett@example.edu
     //                                LD6i12QyMiN@
     //login function for console
     public static void login() throws SQLException {
         Scanner scan = new Scanner(System.in);
         sessionToken sT = new sessionToken();
-        System.out.println("Please enter your SCFMS email: ");
-        String username = scan.nextLine();
-        System.out.println("Please enter your SCFMS password: ");
-        String password = scan.nextLine();
         sqlHandler sql = new sqlHandler();
         boolean resultsFound = false;
-        try(PreparedStatement loginPstmnt = conn.prepareStatement(sql.loginQuery())) {
-            loginPstmnt.setString(1, username);
-            loginPstmnt.setString(2, password);
-            try (ResultSet rs = loginPstmnt.executeQuery()) {
-                accessAttempt = 0;
-                if (rs.next()) {
-                    resultsFound = true;
-                    sT.setConsoleUsername(username);
-                    sT.setConsoleUserPassword(password);
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    int columnCount = rsmd.getColumnCount();
-                    try(PreparedStatement phoneNumberPstmnt = conn.prepareStatement(sql.phoneNumberQuery())) {
-                        phoneNumberPstmnt.setString(1, sT.getConsolePassword());
-                        try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
-                            if (phoneRS.next()) {
-                                sT.setConsolePhoneNumber(phoneRS.getLong(1));
-                            }
-                        }
-                    }
-                    try (PreparedStatement welcomePstmnt =conn.prepareStatement(sql.welcomeQuery())){
-                        welcomePstmnt.setString(1, sT.getConsolePassword());
-                        try (ResultSet welcomeRS = welcomePstmnt.executeQuery()){
-                            if(welcomeRS.next()){
-                                System.out.println("Login Successful, welcome " + welcomeRS.getString(1));
-                                sT.setConsoleUserID(welcomeRS.getInt(2));
-                            }
-                        }
-                    }
-                    try (PreparedStatement permissionsPstmnt =conn.prepareStatement(sql.permsQuery())){
-                    permissionsPstmnt.setString(1, sT.getConsolePassword());
-                        try(ResultSet permsRS = permissionsPstmnt.executeQuery() ){
-                            if (permsRS.next()){
-                                if (permsRS.getInt(1) < 4) {
-                                    int perms = 1;
-                                    sT.setConsoleUserPermissions(perms);
-                                    menu(sT.getConsolePermissions(), sT);
-                                }
-                                //Checks users permissions, and sets their console menu to the correct permissions
-                                else if (permsRS.getInt(1) == 4) {
-                                    int perms = 4;
-                                    sT.setConsoleUserPermissions(perms);
-                                    menu(sT.getConsolePermissions(), sT);
+        accessAttempt = 0;
+        while (accessAttempt < 3) {
+            System.out.println("Please enter your SCFMS email: ");
+            String username = scan.nextLine();
+            System.out.println("Please enter your SCFMS password: ");
+            String password = scan.nextLine();
+            try (PreparedStatement loginPstmnt = conn.prepareStatement(sql.loginQuery())) {
+                loginPstmnt.setString(1, username);
+                loginPstmnt.setString(2, password);
+                try (ResultSet rs = loginPstmnt.executeQuery()) {
+                    if (rs.next()) {
+                        resultsFound = true;
+                        sT.setConsoleUsername(username);
+                        sT.setConsoleUserPassword(password);
+                        ResultSetMetaData rsmd = rs.getMetaData();
+                        int columnCount = rsmd.getColumnCount();
+                        try (PreparedStatement phoneNumberPstmnt = conn.prepareStatement(sql.phoneNumberQuery())) {
+                            phoneNumberPstmnt.setString(1, sT.getConsolePassword());
+                            try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
+                                if (phoneRS.next()) {
+                                    sT.setConsolePhoneNumber(phoneRS.getLong(1));
                                 }
                             }
                         }
-                    }
-
-
-
-
-                    } else {
-                        if (!resultsFound) {
-                            accessAttempt += 1;
-                            System.out.println("Invalid login info, try again.");
-                            login();
+                        try (PreparedStatement welcomePstmnt = conn.prepareStatement(sql.welcomeQuery())) {
+                            welcomePstmnt.setString(1, sT.getConsolePassword());
+                            try (ResultSet welcomeRS = welcomePstmnt.executeQuery()) {
+                                if (welcomeRS.next()) {
+                                    System.out.println("Login Successful, welcome " + welcomeRS.getString(1));
+                                    sT.setConsoleUserID(welcomeRS.getInt(2));
+                                    boolean verified = true;
+                                    sT.setUserVerification(verified);
+                                }
+                            }
                         }
-                        if (accessAttempt == 3) {
-                            System.out.println("You have failed to login 3 times, client will now shutdown");
-                            System.exit(0);
+                        try (PreparedStatement permissionsPstmnt = conn.prepareStatement(sql.permsQuery())) {
+                            permissionsPstmnt.setString(1, sT.getConsolePassword());
+                            try (ResultSet permsRS = permissionsPstmnt.executeQuery()) {
+                                if (permsRS.next()) {
+                                    if (permsRS.getInt(1) < 4) {
+                                        int perms = 1;
+                                        sT.setConsoleUserPermissions(perms);
+                                        menu(sT.getConsolePermissions(), sT);
+                                    }
+                                    //Checks users permissions, and sets their console menu to the correct permissions
+                                    else if (permsRS.getInt(1) == 4) {
+                                        int perms = 4;
+                                        sT.setConsoleUserPermissions(perms);
+                                        menu(sT.getConsolePermissions(), sT);
+                                    }
+                                }
+                            } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                                     IllegalBlockSizeException | BadPaddingException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
                     }
                 }
             }
         }
-
-
-    public static void menu(int i, sessionToken sT) throws SQLException {
+        if (!resultsFound) {
+            accessAttempt += 1;
+            System.out.println("Invalid login info, try again.");
+            login();
+        }
+        if (accessAttempt == 3) {
+            System.out.println("You have failed to login 3 times, client will now shutdown");
+            System.exit(0);
+        }
+    }
+    public static void menu(int i, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         int perms = i;
         int choice=0;
         Scanner scan = new Scanner(System.in);
@@ -202,8 +206,15 @@ public class Launcher {
         }
     }
 
-    public static void accessLogs(sessionToken sT) throws SQLException {
+    public static void accessLogs(sessionToken sT) throws SQLException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(twoFactorCode(sT)) {
+            String input;
+            //These lines generate the key in the DES format, and save it to key
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("DES");
+            SecretKey key = keyGenerator.generateKey();
+            //These lines initialize the cipher for encryption
+            Cipher desEncryptCipher = Cipher.getInstance("DES");
+            desEncryptCipher.init(Cipher.ENCRYPT_MODE, key);
             System.out.println("Accessing... " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
             int choice =0;
@@ -217,7 +228,23 @@ public class Launcher {
             while (rsLogs.next()) {
                 rowsFound = true;
                 for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(rsmd.getColumnName(i) + ": " + rsLogs.getString(i) + " ");
+                    input = rsmd.getColumnName(i) + ": " + rsLogs.getString(i) + " ";
+                    byte[] cipherText = desEncryptCipher.doFinal(input.getBytes());
+                    String logsCText = Base64.getEncoder().encodeToString(cipherText);
+                    if(sT.getUserVerification()){
+                        Cipher desDecryptCipher = Cipher.getInstance("DES");
+                        desDecryptCipher.init(Cipher.DECRYPT_MODE, key);
+                        //These lines decrypt the cypher text, first in byte form, then into text form
+                        byte[] decodedBytes = Base64.getDecoder().decode(logsCText);
+                        byte[] decryptedBytes = desDecryptCipher.doFinal(decodedBytes);
+                        //These lines output the plain text
+                        String outputPText = new String(decryptedBytes, StandardCharsets.UTF_8);
+                        System.out.println(outputPText);
+                    }
+                    else{
+                        System.out.println("User is not verified, logs are encrypted");
+                        return;
+                    }
                 }
                 System.out.println();
             }
@@ -233,7 +260,7 @@ public class Launcher {
         }
     }
 
-    public static void genReport(sessionToken sT) throws SQLException {
+    public static void genReport(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(twoFactorCode(sT)) {
             System.out.println("Report Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -246,10 +273,16 @@ public class Launcher {
             int columnCount = rsmd.getColumnCount();
             int rowNum = 0;
             while (rs.next()) {
+                int pos = 0;
                 for (int i = 1; i < columnCount + 1; i++) {
-                    String logString = rs.getString(i);
-                    System.out.println(logString + ": ");
+                    String logString = rsmd.getColumnName(i) + ": " + rs.getString(i) + " ";
+                    System.out.print(logString + " | ");
                     rowNum += 1;
+                    pos ++;
+                }
+                if(pos %6 == 0){
+                    System.out.println();
+                    System.out.println();
                 }
             }
             System.out.println(rowNum / 5);
@@ -262,7 +295,7 @@ public class Launcher {
         }
     }
 
-    public static void startEvent(sessionToken sT) throws SQLException {
+    public static void startEvent(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(twoFactorCode(sT)) {
             /*1. make menu for the event. 2. make user input for event. 3. implement into db? */
             System.out.println("Event Menu: " + "\nPlease pay attention to formatting");
@@ -289,7 +322,7 @@ public class Launcher {
 
     }
 
-    public static void emergency(sessionToken sT) throws SQLException {
+    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         /*1. make emergency menu (what, where). 2. get information from DB.
          * 3. theoretically send information.  */
         if(twoFactorCode(sT)) {
@@ -316,7 +349,7 @@ public class Launcher {
             System.exit(0);
         }
     }
-    public static void createUser(sessionToken sT) throws SQLException {
+    public static void createUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(twoFactorCode(sT)) {
             System.out.println("User Creation Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -330,7 +363,7 @@ public class Launcher {
             System.exit(0);
         }
     }
-    public static void guestUser(sessionToken sT) throws SQLException{
+    public static void guestUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(twoFactorCode(sT)) {
             System.out.println("Guest User Creation Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -344,7 +377,7 @@ public class Launcher {
             System.exit(0);
         }
     }
-    public static void createUserMenu(int choiceIn, sessionToken sT)throws SQLException{
+    public static void createUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         int choice = choiceIn;
         sqlHandler sql = new sqlHandler();
         int newUserID =0;
@@ -621,6 +654,9 @@ public class Launcher {
                             }
 
                         }
+                    } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                             IllegalBlockSizeException | BadPaddingException e) {
+                        throw new RuntimeException(e);
                     }
                     break;
                 case 11:
@@ -631,7 +667,7 @@ public class Launcher {
             }
         } while (choice != 11);
     }
-    public static void guestUserMenu(int choiceIn, sessionToken sT) throws SQLException{
+    public static void guestUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         int choice = choiceIn;
         sqlHandler sql = new sqlHandler();
         int newUserID =0;
@@ -858,6 +894,9 @@ public class Launcher {
                             }
 
                         }
+                    } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
+                             IllegalBlockSizeException | BadPaddingException e) {
+                        throw new RuntimeException(e);
                     }
                     break;
                 case 11:
@@ -868,7 +907,7 @@ public class Launcher {
             }
         } while (choice != 10);
 }
-    public static void changePermissions(sessionToken sT) throws SQLException {
+    public static void changePermissions(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         int permissions = permissionsGetter(sT);
         String classifications = "";
         String passwordInput = "";

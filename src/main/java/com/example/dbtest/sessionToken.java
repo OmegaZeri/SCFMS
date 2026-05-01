@@ -4,7 +4,7 @@ public class sessionToken {
     private String consoleUsername;
     private String consolePassword;
     private int consoleID;
-    private String consoleEmail;
+    private boolean isUserVerified;
     private int consolePermissions;
     private long consolePhoneNumber;
     private String newUsername;
@@ -20,6 +20,7 @@ public class sessionToken {
     public int getConsolePermissions() {return consolePermissions;}
     public String getNewUsername() {return newUsername;}
     public String getNewUsernameLast() {return newUsernameLast;}
+    public boolean getUserVerification(){return isUserVerified;}
     public void setConsoleUsername(String username) {consoleUsername = username;}
     public void setConsoleUserPassword(String password) {consolePassword = password;}
     public void setConsoleUserID(int ID) {consoleID = ID;}
@@ -27,4 +28,5 @@ public class sessionToken {
     public void setConsolePhoneNumber(long phoneNumber){consolePhoneNumber=phoneNumber;}
     public void setNewUsername(String newUsernameInput){newUsername = newUsernameInput;}
     public void setNewUserLast(String newUserLastInput){newUsernameLast = newUserLastInput;}
+    public void setUserVerification(Boolean verified){isUserVerified = verified;}
 }
