@@ -1054,44 +1054,58 @@ public class Launcher {
         else{return null;}
     }
     public static String newUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn, String i) throws SQLException {
-        System.out.println("Phone Number Applied");
-        Faker phoneFaker = new Faker();
-        boolean phoneNumberGenerated = false;
-        String newUserPhoneNumber = phoneFaker.phoneNumber().phoneNumber();
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Enter a phone number:");
+        System.out.println("Format xxxyyyzzzz");
+        String newUserPhoneNumber = scan.nextLine();
+        if (newUserPhoneNumber.length() != 10 || !newUserPhoneNumber.matches("[0-9]+")) {
+            System.out.println("Invalid format, try again");
+            return newUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
+        }
         try (PreparedStatement phoneNumberPstmnt = conn.prepareStatement(sqlIn.userPhoneNumberQuery())) {
             phoneNumberPstmnt.setString(1, newUserPhoneNumber);
             try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
                 if (phoneRS.next()) {
-                    newUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
+                    System.out.println("Phone number exists, enter a new one");
+                    return newUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
+                } else {
+                    System.out.println("Phone number accepted");
+                    return newUserPhoneNumber;
                 }
-                else{ phoneNumberGenerated=true;}
             }
 
+        }catch(SQLException e){
+            System.out.println("Database error occurred, restarting");
+            return newUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
         }
-        if(phoneNumberGenerated){
-            return newUserPhoneNumber;
-        }
-        else{return null;}
     }
     public static String newGuestUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn, String i) throws SQLException {
-        System.out.println("Phone Number Applied");
-        Faker phoneFaker = new Faker();
-        boolean phoneNumberGenerated = false;
-        String newUserPhoneNumber = phoneFaker.phoneNumber().phoneNumber();
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Enter a phone number:");
+        System.out.println("Format xxxyyyzzzz");
+        String newGuestUserPhoneNumber = scan.nextLine();
+        String input = i;
+        if (newGuestUserPhoneNumber.length() != 10 || !newGuestUserPhoneNumber.matches("[0-9]+")) {
+            System.out.println("Invalid format, try again");
+            return newUserPhoneNumberGeneration(sT, sqlIn, newGuestUserPhoneNumber);
+        }
         try (PreparedStatement phoneNumberPstmnt = conn.prepareStatement(sqlIn.guestPhoneNumberQuery())) {
-            phoneNumberPstmnt.setString(1, newUserPhoneNumber);
+            phoneNumberPstmnt.setString(1, newGuestUserPhoneNumber);
             try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
                 if (phoneRS.next()) {
-                    newGuestUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
+                    System.out.println("Phone number exists, enter a new one");
+                    return newGuestUserPhoneNumberGeneration(sT, sqlIn, newGuestUserPhoneNumber);
                 }
-                else{ phoneNumberGenerated=true;}
+                else {
+                    System.out.println("Phone number accepted");
+                    return newGuestUserPhoneNumber;
+                }
             }
 
+        }catch(SQLException e){
+            System.out.println("Database error occurred, restarting");
+            return newGuestUserPhoneNumberGeneration(sT, sqlIn, newGuestUserPhoneNumber);
         }
-        if(phoneNumberGenerated){
-            return newUserPhoneNumber;
-        }
-        else{return null;}
     }
     public static int newUserAgeGetter(int newUserAge){
         System.out.println("Enter new user's age");
