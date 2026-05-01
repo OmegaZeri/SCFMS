@@ -917,7 +917,9 @@ public class Launcher {
         while (!userFound){
             System.out.println("Enter user's password associated with the account you want to edit, or type exit to close");
             passwordInput = scan.nextLine();
-            if (passwordInput.equalsIgnoreCase("exit")){menu(permissions, sT);}
+            if (passwordInput.equalsIgnoreCase("exit")){
+                permissions =4;
+                menu(permissions, sT);}
             try(PreparedStatement reqPermsPstmnt = conn.prepareStatement(sql.requestPermissionsQuery())){
                 reqPermsPstmnt.setString(1,passwordInput);
                 try (ResultSet reqPermsRS = reqPermsPstmnt.executeQuery()){
