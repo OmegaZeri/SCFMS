@@ -1,5 +1,6 @@
 package com.example.dbtest;
 
+import java.lang.classfile.instruction.ExceptionCatch;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.sql.*;
@@ -21,6 +22,11 @@ public class Launcher {
         System.out.println("Please enter DB Credentials");
         sql.setSqlUser();
         String user = sql.getSqlUser();
+        boolean inputCheck= user.matches("^[a-zA-Z0-9]*$");
+        if(inputCheck){
+            System.out.println("Valid input");
+        }
+        else{dbConnector();}
         sql.setSqlPassword();
         String password = sql.getSqlPassword();
         String connection = sql.getSqlConnection();
@@ -31,7 +37,7 @@ public class Launcher {
     }
 
     //Undergrad login example:    ctullis@example.edu
-    //                            a@@d*fWYJD^
+    //
     //Security officer login example: jbarrett@example.edu
     //                                LD6i12QyMiN@
     //login function for console
@@ -112,7 +118,7 @@ public class Launcher {
 
     public static void menu(int i, sessionToken sT) throws SQLException {
         int perms = i;
-        int choice;
+        int choice=0;
         Scanner scan = new Scanner(System.in);
         //Undergrad Menu Choices
         if (perms == 1) {
@@ -120,7 +126,12 @@ public class Launcher {
                 System.out.println("------Example University Console------");
                 System.out.println("      ------1. Access Logs------      ");
                 System.out.println("       ------  2. Quit   ------      ");
-                choice = scan.nextInt();
+                try {
+                    choice = scan.nextInt();
+                }catch(InputMismatchException e){
+                    System.out.println("Invalid input");
+                    menu(i, sT);
+                }
                 switch (choice) {
                     case 1:
                         System.out.println("Pulling your logs for the last 30 days.");
@@ -143,7 +154,13 @@ public class Launcher {
                 System.out.println("      ------5. Create User------       ");
                 System.out.println("      ------6. Guest User------       ");
                 System.out.println("       ------  7. Quit   ------      ");
-                choice = scan.nextInt();
+                try {
+                    choice = scan.nextInt();
+                }catch(InputMismatchException e){
+                    System.out.println("Invalid input");
+                    menu(i, sT);
+                }
+
                 switch (choice) {
                     case 1:
                         System.out.println("Pulling your logs for the last 30 days.");
@@ -372,11 +389,30 @@ public class Launcher {
                     System.out.println("Input name of user: ");
                     String newUsernameFirst, newUsernameLast;
                     try (PreparedStatement userNamePstmnt = conn.prepareStatement(sql.userNameQuery())) {
-                        scan.nextLine();
                         System.out.println("First name:");
+                        scan.nextLine();
                         newUsernameFirst = scan.nextLine();
+                        newUsernameFirst = newUsernameFirst.trim();
+                        boolean inputCheck= newUsernameFirst.matches("^[a-zA-Z]+$");
+                        if(inputCheck){
+                            System.out.println("Valid input");
+                        }
+                        else{
+                            System.out.println("Username cannot contain numbers or special characters, retry");
+                            break;
+                        }
                         System.out.println("Last name:");
                         newUsernameLast = scan.nextLine();
+                        newUsernameLast = newUsernameLast.trim();
+                        sT.setNewUserLast(newUsernameLast);
+                        inputCheck= newUsernameLast.matches("^[a-zA-Z]+");
+                        if(inputCheck){
+                            System.out.println("Valid input");
+                        }
+                        else{
+                            System.out.println("Username cannot contain numbers or special characters, retry");
+                            break;
+                        }
                         sT.setNewUserLast(newUsernameLast);
                         newUsername = String.join(" ", newUsernameFirst, newUsernameLast);
                         sT.setNewUsername(newUsername);
@@ -423,7 +459,7 @@ public class Launcher {
                 case 5:
                     //
                     System.out.println("Enter new user's phone number");
-                    newUserPhonenumber = newUserPhoneNumberGeneration(sT, sql);
+                    newUserPhonenumber = newUserPhoneNumberGeneration(sT, sql, newUserPhonenumber);
                     break;
                 case 6:
                     int classChoice;
@@ -436,9 +472,14 @@ public class Launcher {
                             4.Security Officer
                             5.Close menu
                             """);
-                        classChoice=scan.nextInt();
+                        try{
+                            classChoice=scan.nextInt();
+                        }catch (InputMismatchException e){
+                            System.out.println("Not a numerical choice");
+                            scan.next();
+                            break;
+                        }
                         scan.nextLine();
-                        String classificationChoice;
                         switch(classChoice){
                             case 1:
                                 System.out.println("User is an undergraduate student");
@@ -636,9 +677,27 @@ public class Launcher {
                         scan.nextLine();
                         System.out.println("First name:");
                         newUsernameFirst = scan.nextLine();
+                        newUsernameFirst = newUsernameFirst.trim();
+                        boolean inputCheck= newUsernameFirst.matches("^[a-zA-Z]+");
+                        if(inputCheck){
+                            System.out.println("Valid input");
+                        }
+                        else{
+                            System.out.println("Username cannot contain numbers or special characters, retry");
+                            break;
+                        }
                         System.out.println("Last name:");
                         newUsernameLast = scan.nextLine();
+                        newUsernameLast = newUsernameLast.trim();
                         sT.setNewUserLast(newUsernameLast);
+                        inputCheck= newUsernameLast.matches("^[a-zA-Z]+");
+                        if(inputCheck){
+                            System.out.println("Valid input");
+                        }
+                        else{
+                            System.out.println("Username cannot contain numbers or special characters, retry");
+                            break;
+                        }
                         newUsername = String.join(" ", newUsernameFirst, newUsernameLast);
                         sT.setNewUsername(newUsername);
                         userNamePstmnt.setString(1, newUsername);
@@ -684,7 +743,7 @@ public class Launcher {
                 case 5:
                     //
                     System.out.println("Enter new user's phone number");
-                    newUserPhonenumber = newGuestUserPhoneNumberGeneration(sT, sql);
+                    newUserPhonenumber = newGuestUserPhoneNumberGeneration(sT, sql, newUserPhonenumber);
                     break;
                 case 6:
                     scan.nextLine();
@@ -699,8 +758,8 @@ public class Launcher {
                 case 8:
                     System.out.println("Getting revoke time and date");
                     System.out.println("1. Revoke in 1 day");
-                    System.out.println("1. Revoke in 1 week");
-                    System.out.println("1. Revoke in 1 month");
+                    System.out.println("2. Revoke in 1 week");
+                    System.out.println("3. Revoke in 1 month");
                     int revChoice=scan.nextInt();
                     switch(revChoice){
                         case 1:
@@ -800,29 +859,48 @@ public class Launcher {
             }
         } while (choice != 10);
 }
-
-
+//    public static String changePermissions(sessionToken sT) throws SQLException{
+//        System.out.println("Change user permissions:");
+//        Scanner scan = new Scanner(System.in);
+//        System.out.println("Input new user's permissions");
+//        try {
+//            int permissions = scan.nextInt();
+//        }
+//        catch(InputMismatchException e){
+//            System.out.println("Invalid input");
+//            return changePermissions(sT);
+//        }
+//    }
     public static boolean twoFactorCode(sessionToken sT){
         int twofactAttempts = 0;
+        boolean auth = false;
         Scanner phoneScan = new Scanner(System.in);
         System.out.println("Sending 2FA code to " + sT.getConsolePhoneNumber());
         Random twoFactorGenerator = new Random();
-        int code = twoFactorGenerator.nextInt(90000) + 10000;
-        if (code == 100000) {code -= 1;}
-        System.out.println("334-670-1110: " + code );
-        System.out.println("Please enter the code you received on your device.");
-        boolean auth = false;
-        if (twofactAttempts==3){
+        while (twofactAttempts < 3 && !auth){
+            int code = twoFactorGenerator.nextInt(90000) + 10000;
+            if (code == 100000) {code -= 1;}
+            int input = 0;
+            System.out.println("334-670-1110: " + code );
+            System.out.println("Please enter the code you received on your device.");
+            try{
+                input = phoneScan.nextInt();
+                if(input==code) {
+                    System.out.println("Success! Redirecting...");
+                    auth = true;
+                }
+                else{
+                    twofactAttempts++;
+                    System.out.println("Incorrect code, resending");
+                }
+            }catch(InputMismatchException e){
+                System.out.println("Not a numerical input, re enter");
+                phoneScan.next();
+                return twoFactorCode(sT);
+            }
+        }
+        if(!auth){
             System.out.println("Too many failed attempts, closing console.");
-        }
-        else if(phoneScan.nextInt()==code){
-            System.out.println("Success! Redirecting...");
-            auth = true;
-        }
-        else if(!auth){
-            twofactAttempts =+ 1;
-            System.out.println("Incorrect code, resending");
-            twoFactorCode(sT);
         }
         return auth;
     }
@@ -868,7 +946,7 @@ public class Launcher {
         }
         else{return null;}
     }
-    public static String newUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn) throws SQLException {
+    public static String newUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn, String i) throws SQLException {
         System.out.println("Phone Number Applied");
         Faker phoneFaker = new Faker();
         boolean phoneNumberGenerated = false;
@@ -877,7 +955,7 @@ public class Launcher {
             phoneNumberPstmnt.setString(1, newUserPhoneNumber);
             try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
                 if (phoneRS.next()) {
-                    newUserPhoneNumberGeneration(sT, sqlIn);
+                    newUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
                 }
                 else{ phoneNumberGenerated=true;}
             }
@@ -888,7 +966,7 @@ public class Launcher {
         }
         else{return null;}
     }
-    public static String newGuestUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn) throws SQLException {
+    public static String newGuestUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn, String i) throws SQLException {
         System.out.println("Phone Number Applied");
         Faker phoneFaker = new Faker();
         boolean phoneNumberGenerated = false;
@@ -897,7 +975,7 @@ public class Launcher {
             phoneNumberPstmnt.setString(1, newUserPhoneNumber);
             try (ResultSet phoneRS = phoneNumberPstmnt.executeQuery()) {
                 if (phoneRS.next()) {
-                    newGuestUserPhoneNumberGeneration(sT, sqlIn);
+                    newGuestUserPhoneNumberGeneration(sT, sqlIn, newUserPhoneNumber);
                 }
                 else{ phoneNumberGenerated=true;}
             }
@@ -911,9 +989,14 @@ public class Launcher {
     public static int newUserAgeGetter(int newUserAge){
         System.out.println("Enter new user's age");
         Scanner scan = new Scanner(System.in);
-        newUserAge = scan.nextInt();
-        scan.nextLine();
-        if(newUserAge > 99 && newUserAge < 1) {System.out.println("There's no way, re enter age");
+        try{
+            newUserAge = scan.nextInt();
+        }catch(InputMismatchException e){
+            System.out.println("Not a numerical input, re enter");
+            scan.nextLine();
+            return newUserAgeGetter(newUserAge);
+        }
+        if(newUserAge > 99 || newUserAge < 1) {System.out.println("There's no way, re enter age");
             newUserAge = 0;
         }
         return newUserAge;
@@ -921,9 +1004,14 @@ public class Launcher {
     public static int newGuestUserAgeGetter(int newUserAge){
         System.out.println("Enter new user's age");
         Scanner scan = new Scanner(System.in);
-        newUserAge = scan.nextInt();
-        scan.nextLine();
-        if(newUserAge > 99 && newUserAge < 1) {System.out.println("There's no way, re enter age");
+        try{
+            newUserAge = scan.nextInt();
+        }catch(InputMismatchException e){
+            System.out.println("Not a numerical input, re enter");
+            scan.next();
+            newGuestUserAgeGetter(newUserAge);
+        }
+        if(newUserAge > 99 || newUserAge < 1) {System.out.println("There's no way, re enter age");
             newUserAge = 0;
         }
         return newUserAge;
