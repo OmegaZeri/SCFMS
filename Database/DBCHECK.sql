@@ -1,5 +1,5 @@
 SHOW DATABASES;
-USE scfms_db;
+USE SCFMS;
 SHOW TABLES;
 
 SELECT COUNT(*) AS total_users FROM users;

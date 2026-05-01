@@ -10,6 +10,7 @@ import mysql.connector
 
 
 #CONFIG
+DEFAULT_DATABASE = "SCFMS"
 NUM_RECORDS = 3000  # change this to generate more rows/Generate larger data set for better testing of performance and indexing
 NUM_GUEST_USERS = 250
 NUM_BUILDINGS = 8
@@ -131,9 +132,8 @@ def load_db_config() -> dict:
     with open(config_path, "r", encoding="utf-8") as f:
         db_config = json.load(f) #Loads JSON config file for connection stuff
 
-    db_name = db_config.get("database")
-    if not db_name:
-        raise ValueError("db_config.json must include a non-empty 'database' field.")
+    db_name = db_config.get("database") or DEFAULT_DATABASE
+    db_config["database"] = db_name
 
     # Validate DB name to prevent odd characters / SQL injection via config
     if not re.fullmatch(r"[A-Za-z0-9_]+", db_name):
