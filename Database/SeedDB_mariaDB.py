@@ -93,7 +93,7 @@ VALUES (%s, %s)
 """
 
 INSERT_GUEST_USERS_SQL = """
-INSERT INTO guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, `Revoke Access`)
+INSERT INTO guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, RevokeAccess)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 """
 
