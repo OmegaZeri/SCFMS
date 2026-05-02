@@ -56,4 +56,5 @@ public class sqlHandler {
                 public String roomExistsQuery(){return"select privilegerequired from rooms where roomID = ?";}
                 public String roomUnlockUpdate(){return "update rooms set islocked = 0 where roomID=?";}
                 public String roomLockUpdate(){return "update rooms set islocked = 1 where roomID=?";}
+                public String buildingQuery(){return"select buildingName from buildings where buildingID= ?";}
 }

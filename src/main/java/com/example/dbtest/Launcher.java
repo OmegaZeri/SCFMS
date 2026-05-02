@@ -168,13 +168,12 @@ public class Launcher {
                 System.out.println("      ------1. Access Logs------      ");
                 System.out.println("       ------2. Start Event------     ");
                 System.out.println("       ------3. Emergency------       ");
-                System.out.println("    ------4. Security Alert ------    ");
-                System.out.println("   ------5. Generate Reports------    ");
-                System.out.println("      ------6. Create User------      ");
-                System.out.println("      ------7. Guest User------       ");
-                System.out.println("  ------8. Change Permissions------   ");
-                System.out.println(" ------ 9.Request Access Sim. ------  ");
-                System.out.println("       ------  10. Quit   ------      ");
+                System.out.println("   ------4. Generate Reports------    ");
+                System.out.println("      ------5. Create User------      ");
+                System.out.println("      ------6. Guest User------       ");
+                System.out.println("  ------7. Change Permissions------   ");
+                System.out.println(" ------ 8.Request Access Sim. ------  ");
+                System.out.println("       ------  9. Quit   ------      ");
                 try {
                     choice = scan.nextInt();
                 }catch(InputMismatchException e){
@@ -196,34 +195,32 @@ public class Launcher {
                         emergency(sT);
                         break;
                     case 4:
-                        System.out.println("Redirecting to security alert menu");
-                    case 5:
                         System.out.println("Generating log report");
                         genReport(sT);
                         break;
-                    case 6:
+                    case 5:
                         System.out.println("Redirecting to user creation menu");
                         createUser(sT);
                         break;
-                    case 7:
+                    case 6:
                         System.out.println("Redirecting to guest user creation menu");
                         guestUser(sT);
                         break;
-                    case 8:
+                    case 7:
                         System.out.println("Opening user editor");
                         changePermissions(sT);
                         break;
-                    case 9:
+                    case 8:
                         System.out.println("Simulating access request");
                         requestAccess(sT, sT.getConsolePermissions());
                         break;
-                    case 10:
+                    case 9:
                         System.out.println("Closing console...");
                         System.exit(0);
                     default:
                         System.out.println("Invalid choice, try again?");
                 }
-            } while (choice != 10);
+            } while (choice != 9);
         }
     }
 
@@ -601,6 +598,7 @@ public class Launcher {
                     System.out.println("Building ID: " + buildingID);
                     System.out.println("Description: " + eventDescription);
                     System.out.println("Time: " + eventTime);
+                    securityAlert(sql, buildingID, eventDescription, eventTime);
                 }
                 else if(locationChoice == 2){
                     ArrayList<Integer> selectedRooms = eventRoomGetter(sql, scan, buildingID);
@@ -612,6 +610,7 @@ public class Launcher {
                     System.out.println("Rooms: " + selectedRooms);
                     System.out.println("Description: " + eventDescription);
                     System.out.println("Time: " + eventTime);
+                    securityAlert(sql, buildingID, eventDescription, eventTime);
                 }
                 else{
                     System.out.println("Invalid choice, emergency was not created");
@@ -959,7 +958,7 @@ public class Launcher {
         int newUserAge=0;
         LocalDateTime newUserCreationDate = LocalDateTime.of(2000,1,1,0,0);
         LocalDateTime newUserRevokeDate = LocalDateTime.of(2000,1,1,0,0);
-            do {
+            while(choice!=10){
             Scanner scan = new Scanner(System.in);
             System.out.println("       ------Create User------     ");
             System.out.println("        ------1. UserID------      ");
@@ -1135,7 +1134,7 @@ public class Launcher {
                                             guestUserMenu(choice, sT);
                                         }
                                         else{
-                                            userCreatePstmnt.setString(5,newUserPassword);
+                                            userCreatePstmnt.setString(5,newUserPhonenumber);
                                             if(newUserAge==0){
                                                 System.out.println("User does not have their age set");
                                                 guestUserMenu(choice, sT);
@@ -1179,13 +1178,13 @@ public class Launcher {
                         throw new RuntimeException(e);
                     }
                     break;
-                case 11:
+                case 10:
                     System.out.println("Closing user creator");
                     menu(sT.getConsolePermissions(), sT);
                 default:
                     System.out.println("Invalid choice, try again?");
             }
-        } while (choice != 10);
+        }
 }
     public static void changePermissions(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         //Function that takes user input to find a user in database, and change their permissions
@@ -1224,7 +1223,7 @@ public class Launcher {
             else if(permissions==3){
                 classifications = "faculty";
             }
-            else if (permissions==34){
+            else if (permissions==4){
                 classifications ="security officer";
             }
             else if (permissions >4 || permissions < 1){
@@ -1264,13 +1263,8 @@ public class Launcher {
     }
     public static boolean monitoring(boolean isThreat, int roomAccessAttempt)throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         //Monitors entire program to see if any actions are suspicious
-        if (roomAccessAttempt <3){
-            return false;
-        }
-        else if(!isThreat){
-            return false;
-        }
-        return true;
+        if(roomAccessAttempt>=3 || isThreat){return  true;}
+        return false;
     }
     public static boolean twoFactorCode(sessionToken sT){
         //Helper function that asks for logged-in user's phonenumber to access any console functions
@@ -1303,7 +1297,7 @@ public class Launcher {
         }
         if(!auth){
             System.out.println("Too many failed attempts, closing console.");
-            isThreat=false;
+            isThreat=true;
         }
         return auth;
     }
@@ -1519,7 +1513,7 @@ public class Launcher {
         }catch(InputMismatchException e){
             System.out.println("Not a numerical input, re enter");
             scan.next();
-            newGuestUserAgeGetter(newUserAge);
+            return newGuestUserAgeGetter(newUserAge);
         }
         if(newUserAge > 99 || newUserAge < 1) {System.out.println("There's no way, re enter age");
             newUserAge = 0;
@@ -1582,5 +1576,22 @@ public class Launcher {
                 }
             }
         }
+    }
+    public static void securityAlert(sqlHandler sql, int buildingID, String eventDescription, LocalDateTime eventTime)throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException{
+        try(PreparedStatement buildingQueryPstmnt = conn.prepareStatement(sql.buildingQuery())){
+            buildingQueryPstmnt.setInt(1,buildingID);
+            try(ResultSet buildingQueryRS = buildingQueryPstmnt.executeQuery()){
+                while(buildingQueryRS.next()){
+                    System.out.println("334-670-1110: Students and Faculty be advised there is an emergency occurring at "
+                            + buildingQueryRS.getString(1)
+                            + ", The description is: "
+                            + eventDescription
+                            + ", and the time is: "
+                            + eventTime + "."
+                    );
+                }
+            }
+        }
+
     }
 } //end of program
