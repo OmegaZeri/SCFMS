@@ -111,7 +111,7 @@ public class Launcher {
                                     }
                                 }
                             } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
-                                     IllegalBlockSizeException | BadPaddingException e) {
+                                     IllegalBlockSizeException | BadPaddingException | InterruptedException e) {
                                 throw new RuntimeException(e);
                             }
                         }
@@ -126,7 +126,7 @@ public class Launcher {
         System.out.println("You have failed to login 3 times, client will now shutdown");
         isThreat=false;
     }
-    public static void menu(int i, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void menu(int i, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         int perms = i;
         int choice=0;
         Scanner scan = new Scanner(System.in);
@@ -223,7 +223,7 @@ public class Launcher {
         }
     }
 
-    public static void accessLogs(sessionToken sT) throws SQLException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void accessLogs(sessionToken sT) throws SQLException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         if(twoFactorCode(sT)) {
             String input;
             //These lines generate the key in the DES format, and save it to key
@@ -277,7 +277,7 @@ public class Launcher {
         }
     }
 
-    public static void genReport(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void genReport(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         if(twoFactorCode(sT)) {
             System.out.println("Report Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -312,7 +312,7 @@ public class Launcher {
         }
     }
 
-    public static void startEvent(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void startEvent(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         if(twoFactorCode(sT)) {
             /*1. make menu for the event. 2. make user input for event. 3. implement into db? */
             System.out.println("Event Menu: " + "\nPlease pay attention to formatting");
@@ -339,7 +339,7 @@ public class Launcher {
 
     }
 
-    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         /*1. make emergency menu (what, where). 2. get information from DB.
          * 3. theoretically send information.  */
         if(twoFactorCode(sT)) {
@@ -366,7 +366,7 @@ public class Launcher {
             System.exit(0);
         }
     }
-    public static void createUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void createUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         if(twoFactorCode(sT)) {
             System.out.println("User Creation Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -380,7 +380,7 @@ public class Launcher {
             System.exit(0);
         }
     }
-    public static void guestUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void guestUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         if(twoFactorCode(sT)) {
             System.out.println("Guest User Creation Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -394,7 +394,7 @@ public class Launcher {
             System.exit(0);
         }
     }
-    public static void createUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void createUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         int choice = choiceIn;
         sqlHandler sql = new sqlHandler();
         int newUserID =0;
@@ -672,7 +672,7 @@ public class Launcher {
 
                         }
                     } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
-                             IllegalBlockSizeException | BadPaddingException e) {
+                             IllegalBlockSizeException | BadPaddingException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                     break;
@@ -684,7 +684,7 @@ public class Launcher {
             }
         } while (choice != 11);
     }
-    public static void guestUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void guestUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         int choice = choiceIn;
         sqlHandler sql = new sqlHandler();
         int newUserID =0;
@@ -912,7 +912,7 @@ public class Launcher {
 
                         }
                     } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException |
-                             IllegalBlockSizeException | BadPaddingException e) {
+                             IllegalBlockSizeException | BadPaddingException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                     break;
@@ -924,7 +924,7 @@ public class Launcher {
             }
         } while (choice != 10);
 }
-    public static void changePermissions(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void changePermissions(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         int permissions = permissionsGetter(sT);
         String classifications = "";
         String passwordInput = "";
@@ -1037,7 +1037,7 @@ public class Launcher {
         }
         return auth;
     }
-    public static String requestAccess(sessionToken sT, int userPermissions) throws SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public static String requestAccess(sessionToken sT, int userPermissions) throws SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InterruptedException {
         int roomSelection=0;
         String buildingSelection="";
         int requiredPrivilege;
@@ -1090,400 +1090,12 @@ public class Launcher {
                 case 9:
                     System.out.println("Exiting ");
                     return null;
+                default: System.out.println("Invalid Choice"); continue;
             }
-            if(buildingSelection.equals("Admin Hall")){
-                try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                    String input = "%" + buildingSelection + "%";
-                    roomQueryPstmnt.setString(1, input);
-                    System.out.println(roomQueryPstmnt);
-                    try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                        ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                        int columnCount = rsmd.getColumnCount();
-                        boolean rowsFound = false;
-                        System.out.println("User's permissions:" + sT.getConsolePermissions());
-                        while (roomQueryRS.next()) {
-                            rowsFound = true;
-                            for (int i = 1; i <= columnCount; i++) {
-                                input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                System.out.println(input);
-                            }
-                        }
-                        if(rowsFound){
-                            System.out.println("Select a roomID");
-                            try {
-                                roomSelection =scan.nextInt();
-                                try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                    roomExistsPstmnt.setInt(1,roomSelection);
-                                    try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                        if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                            System.out.println("Room is unlocked");
-                                            roomOpen(roomSelection, sql);
-                                        }
-                                    } catch (InterruptedException e) {
-                                        throw new RuntimeException(e);
-                                    }
+            handleBuildingSelection(buildingSelection, sT, sql, scan);
+            isAllowed=true;
 
-                                }
-                            }catch (InputMismatchException e){
-                                System.out.println("Invalid input");
-                                scan.next();
-                                return requestAccess(sT, sT.getConsolePermissions());
-                            }
 
-                        }
-                        else{
-                            System.out.println("No rooms found in that building");
-                            return requestAccess(sT, sT.getConsolePermissions());
-                        }
-
-                    }
-                }
-                if(buildingSelection.equals("Cedar Hall")){
-                    try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                        String input = "%" + buildingSelection + "%";
-                        roomQueryPstmnt.setString(1, input);
-                        System.out.println(roomQueryPstmnt);
-                        try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                            ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                            int columnCount = rsmd.getColumnCount();
-                            boolean rowsFound = false;
-                            System.out.println("User's permissions:" + sT.getConsolePermissions());
-                            while (roomQueryRS.next()) {
-                                rowsFound = true;
-                                for (int i = 1; i <= columnCount; i++) {
-                                    input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                    System.out.println(input);
-                                }
-                            }
-                            if(rowsFound){
-                                System.out.println("Select a roomID");
-                                try {
-                                    roomSelection =scan.nextInt();
-                                    try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                        roomExistsPstmnt.setInt(1,roomSelection);
-                                        try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                            if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                roomOpen(roomSelection, sql);
-                                            }
-                                        } catch (InterruptedException e) {
-                                            throw new RuntimeException(e);
-                                        }
-
-                                    }
-                                }catch (InputMismatchException e){
-                                    System.out.println("Invalid input");
-                                    scan.next();
-                                    return requestAccess(sT, sT.getConsolePermissions());
-                                }
-
-                            }
-                            else{
-                                System.out.println("No rooms found in that building");
-                                return requestAccess(sT, sT.getConsolePermissions());
-                            }
-
-                        }
-                    }
-                }
-                else{
-                    if(buildingSelection.equals("Library Annex")){
-                        try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                            String input = "%" + buildingSelection + "%";
-                            roomQueryPstmnt.setString(1, input);
-                            System.out.println(roomQueryPstmnt);
-                            try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                                ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                                int columnCount = rsmd.getColumnCount();
-                                boolean rowsFound = false;
-                                System.out.println("User's permissions:" + sT.getConsolePermissions());
-                                while (roomQueryRS.next()) {
-                                    rowsFound = true;
-                                    for (int i = 1; i <= columnCount; i++) {
-                                        input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                        System.out.println(input);
-                                    }
-                                }
-                                if(rowsFound){
-                                    System.out.println("Select a roomID");
-                                    try {
-                                        roomSelection =scan.nextInt();
-                                        try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                            roomExistsPstmnt.setInt(1,roomSelection);
-                                            try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                                if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                    roomOpen(roomSelection, sql);
-                                                }
-                                            } catch (InterruptedException e) {
-                                                throw new RuntimeException(e);
-                                            }
-
-                                        }
-                                    }catch (InputMismatchException e){
-                                        System.out.println("Invalid input");
-                                        scan.next();
-                                        return requestAccess(sT, sT.getConsolePermissions());
-                                    }
-
-                                }
-                                else{
-                                    System.out.println("No rooms found in that building");
-                                    return requestAccess(sT, sT.getConsolePermissions());
-                                }
-
-                            }
-                        }
-                    }
-                    else{
-                        if(buildingSelection.equals("North Science")){
-                            try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                                String input = "%" + buildingSelection + "%";
-                                roomQueryPstmnt.setString(1, input);
-                                System.out.println(roomQueryPstmnt);
-                                try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                                    ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                                    int columnCount = rsmd.getColumnCount();
-                                    boolean rowsFound = false;
-                                    System.out.println("User's permissions:" + sT.getConsolePermissions());
-                                    while (roomQueryRS.next()) {
-                                        rowsFound = true;
-                                        for (int i = 1; i <= columnCount; i++) {
-                                            input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                            System.out.println(input);
-                                        }
-                                    }
-                                    if(rowsFound){
-                                        System.out.println("Select a roomID");
-                                        try {
-                                            roomSelection =scan.nextInt();
-                                            try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                                roomExistsPstmnt.setInt(1,roomSelection);
-                                                try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                                    if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                        roomOpen(roomSelection, sql);
-                                                    }
-                                                } catch (InterruptedException e) {
-                                                    throw new RuntimeException(e);
-                                                }
-
-                                            }
-                                        }catch (InputMismatchException e){
-                                            System.out.println("Invalid input");
-                                            scan.next();
-                                            return requestAccess(sT, sT.getConsolePermissions());
-                                        }
-
-                                    }
-                                    else{
-                                        System.out.println("No rooms found in that building");
-                                        return requestAccess(sT, sT.getConsolePermissions());
-                                    }
-
-                                }
-                            }
-                        }
-                        else{
-                            if(buildingSelection.equals("South Science")){
-                                try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                                    String input = "%" + buildingSelection + "%";
-                                    roomQueryPstmnt.setString(1, input);
-                                    System.out.println(roomQueryPstmnt);
-                                    try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                                        ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                                        int columnCount = rsmd.getColumnCount();
-                                        boolean rowsFound = false;
-                                        System.out.println("User's permissions:" + sT.getConsolePermissions());
-                                        while (roomQueryRS.next()) {
-                                            rowsFound = true;
-                                            for (int i = 1; i <= columnCount; i++) {
-                                                input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                                System.out.println(input);
-                                            }
-                                        }
-                                        if(rowsFound){
-                                            System.out.println("Select a roomID");
-                                            try {
-                                                roomSelection =scan.nextInt();
-                                                try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                                    roomExistsPstmnt.setInt(1,roomSelection);
-                                                    try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                                        if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                            roomOpen(roomSelection, sql);
-                                                        }
-                                                    } catch (InterruptedException e) {
-                                                        throw new RuntimeException(e);
-                                                    }
-
-                                                }
-                                            }catch (InputMismatchException e){
-                                                System.out.println("Invalid input");
-                                                scan.next();
-                                                return requestAccess(sT, sT.getConsolePermissions());
-                                            }
-
-                                        }
-                                        else{
-                                            System.out.println("No rooms found in that building");
-                                            return requestAccess(sT, sT.getConsolePermissions());
-                                        }
-
-                                    }
-                                }
-                            }
-                            else{
-                                if(buildingSelection.equals("Student Center")){
-                                    try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                                        String input = "%" + buildingSelection + "%";
-                                        roomQueryPstmnt.setString(1, input);
-                                        System.out.println(roomQueryPstmnt);
-                                        try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                                            ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                                            int columnCount = rsmd.getColumnCount();
-                                            boolean rowsFound = false;
-                                            System.out.println("User's permissions:" + sT.getConsolePermissions());
-                                            while (roomQueryRS.next()) {
-                                                rowsFound = true;
-                                                for (int i = 1; i <= columnCount; i++) {
-                                                    input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                                    System.out.println(input);
-                                                }
-                                            }
-                                            if(rowsFound){
-                                                System.out.println("Select a roomID");
-                                                try {
-                                                    roomSelection =scan.nextInt();
-                                                    try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                                        roomExistsPstmnt.setInt(1,roomSelection);
-                                                        try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                                            if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                                roomOpen(roomSelection, sql);
-                                                            }
-                                                        } catch (InterruptedException e) {
-                                                            throw new RuntimeException(e);
-                                                        }
-
-                                                    }
-                                                }catch (InputMismatchException e){
-                                                    System.out.println("Invalid input");
-                                                    scan.next();
-                                                    return requestAccess(sT, sT.getConsolePermissions());
-                                                }
-
-                                            }
-                                            else{
-                                                System.out.println("No rooms found in that building");
-                                                return requestAccess(sT, sT.getConsolePermissions());
-                                            }
-
-                                        }
-                                    }
-                                }
-                                else{
-                                    if(buildingSelection.equals("East Lecture Hall")){
-                                        try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                                            String input = "%" + buildingSelection + "%";
-                                            roomQueryPstmnt.setString(1, input);
-                                            System.out.println(roomQueryPstmnt);
-                                            try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                                                ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                                                int columnCount = rsmd.getColumnCount();
-                                                boolean rowsFound = false;
-                                                System.out.println("User's permissions:" + sT.getConsolePermissions());
-                                                while (roomQueryRS.next()) {
-                                                    rowsFound = true;
-                                                    for (int i = 1; i <= columnCount; i++) {
-                                                        input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                                        System.out.println(input);
-                                                    }
-                                                }
-                                                if(rowsFound){
-                                                    System.out.println("Select a roomID");
-                                                    try {
-                                                        roomSelection =scan.nextInt();
-                                                        try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                                            roomExistsPstmnt.setInt(1,roomSelection);
-                                                            try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                                                if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                                    roomOpen(roomSelection, sql);
-                                                                }
-                                                            } catch (InterruptedException e) {
-                                                                throw new RuntimeException(e);
-                                                            }
-
-                                                        }
-                                                    }catch (InputMismatchException e){
-                                                        System.out.println("Invalid input");
-                                                        scan.next();
-                                                        return requestAccess(sT, sT.getConsolePermissions());
-                                                    }
-
-                                                }
-                                                else{
-                                                    System.out.println("No rooms found in that building");
-                                                    return requestAccess(sT, sT.getConsolePermissions());
-                                                }
-
-                                            }
-                                        }
-                                    }
-                                    else{
-                                        if(buildingSelection.equals("West Lecture Hall")){
-                                            try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
-                                                String input = "%" + buildingSelection + "%";
-                                                roomQueryPstmnt.setString(1, input);
-                                                System.out.println(roomQueryPstmnt);
-                                                try(ResultSet roomQueryRS =roomQueryPstmnt.executeQuery()){
-                                                    ResultSetMetaData rsmd = roomQueryRS.getMetaData();
-                                                    int columnCount = rsmd.getColumnCount();
-                                                    boolean rowsFound = false;
-                                                    System.out.println("User's permissions:" + sT.getConsolePermissions());
-                                                    while (roomQueryRS.next()) {
-                                                        rowsFound = true;
-                                                        for (int i = 1; i <= columnCount; i++) {
-                                                            input = i +": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i) + " ";
-                                                            System.out.println(input);
-                                                        }
-                                                    }
-                                                    if(rowsFound){
-                                                        System.out.println("Select a roomID");
-                                                        try {
-                                                            roomSelection =scan.nextInt();
-                                                            try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
-                                                                roomExistsPstmnt.setInt(1,roomSelection);
-                                                                try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
-                                                                    if (roomExistsRS.next()&& (roomExistsRS.getInt(1)<=roomSelection)){
-                                                                        roomOpen(roomSelection, sql);
-                                                                    }
-                                                                } catch (InterruptedException e) {
-                                                                    throw new RuntimeException(e);
-                                                                }
-
-                                                            }
-                                                        }catch (InputMismatchException e){
-                                                            System.out.println("Invalid input");
-                                                            scan.next();
-                                                            return requestAccess(sT, sT.getConsolePermissions());
-                                                        }
-
-                                                    }
-                                                    else{
-                                                        System.out.println("No rooms found in that building");
-                                                        return requestAccess(sT, sT.getConsolePermissions());
-                                                    }
-
-                                                }
-                                            }
-                                        }
-                                        else{
-                                            System.out.println("Returning to menu");
-                                            menu(userPermissions, sT);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
         return null;
     }
@@ -1633,5 +1245,45 @@ public class Launcher {
             newUserAge = 0;
         }
         return newUserAge;
+    }
+    private static void handleBuildingSelection(String buildingSelection, sessionToken sT, sqlHandler sql, Scanner scan) throws SQLException, InterruptedException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
+            String input = "%" + buildingSelection + "%";
+            roomQueryPstmnt.setString(1, input);
+            try(ResultSet roomQueryRS = roomQueryPstmnt.executeQuery()){
+                ResultSetMetaData rsmd = roomQueryRS.getMetaData();
+                int columnCount = rsmd.getColumnCount();
+                boolean rowsFound = false;
+                System.out.println("User's permissions: " + sT.getConsolePermissions());
+                while(roomQueryRS.next()){
+                    rowsFound = true;
+                    for(int i = 1; i <= columnCount; i++){
+                        System.out.println(i + ": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i));
+                    }
+                }
+                if(rowsFound){
+                    System.out.println("Select a roomID");
+                    try{
+                        int roomSelection = scan.nextInt();
+                        try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
+                            roomExistsPstmnt.setInt(1, roomSelection);
+                            try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
+                                if(roomExistsRS.next() && roomExistsRS.getInt(1) <= roomSelection){
+                                    roomOpen(roomSelection, sql);
+                                }
+                                else{
+                                    System.out.println("That room does not exist");
+                                }
+                            }
+                        }
+                    } catch(InputMismatchException e){
+                        System.out.println("Invalid input");
+                        scan.next();
+                    }
+                } else {
+                    System.out.println("No rooms found in that building");
+                }
+            }
+        }
     }
 } //end of program
