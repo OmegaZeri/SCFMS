@@ -52,6 +52,10 @@ public class Launcher {
     //Username: ctullis, Email: ctullis@example.edu, Password: securityex
     //Username: wwiesman, Email: wwiesman@example.edu, Password: undergradex
     //Username: jhutto, Email: jhutto@example.edu, Password: facultyex
+    //Undergrad login example:    ctullis@example.edu
+    //                            *0MSf5za3G$
+    //Security officer login example: jbarrett@example.edu
+    //                                LD6i12QyMiN@
     //login function for console
     public static void login() throws SQLException {
         Scanner scan = new Scanner(System.in);
@@ -317,17 +321,50 @@ public class Launcher {
             /*1. make menu for the event. 2. make user input for event. 3. implement into db? */
             System.out.println("Event Menu: " + "\nPlease pay attention to formatting");
             Scanner scan = new Scanner(System.in);
+            sqlHandler sql = new sqlHandler();
             if (sT.getConsolePermissions() == 4) {
                 System.out.println("------Start Event------");
                 System.out.println("Where is the event happening?");
-                String location = scan.nextLine();
+                int buildingID = eventBuildingGetter(sql, scan);
+                int locationChoice = 0;
+                System.out.println("1. Whole building");
+                System.out.println("2. Selected Rooms");
+                try{
+                    locationChoice = scan.nextInt();
+                }catch(InputMismatchException e){
+                    System.out.println("Invalid input");
+                    startEvent(sT);
+                    return;
+                }
                 /*since this is date, could maybe connect to clock somehow?*/
-                System.out.print("What is the time/ when is the event happening? (Ex: date and time)");
-                String time = scan.nextLine();
+                scan.nextLine();
+                LocalDateTime eventTime = eventDateTimeGetter(scan);
+                String eventType = eventTypeGetter(scan);
+                String eventDescription = eventDescriptionGetter(scan);
                 /*add event into db? */
-                System.out.println("\n Event made.");
-                System.out.println("Location: " + location);
-                System.out.println("Time: " + time);
+                if(locationChoice == 1){
+                    insertEventLog(sql, sT.getConsoleUserID(), buildingID, 0, eventType, eventDescription, eventTime);
+                    System.out.println("\n Event made.");
+                    System.out.println("Building ID: " + buildingID);
+                    System.out.println("Event Type: " + eventType);
+                    System.out.println("Description: " + eventDescription);
+                    System.out.println("Time: " + eventTime);
+                }
+                else if(locationChoice == 2){
+                    ArrayList<Integer> selectedRooms = eventRoomGetter(sql, scan, buildingID);
+                    for(int roomID : selectedRooms){
+                        insertEventLog(sql, sT.getConsoleUserID(), buildingID, roomID, eventType, eventDescription, eventTime);
+                    }
+                    System.out.println("\n Event made.");
+                    System.out.println("Building ID: " + buildingID);
+                    System.out.println("Rooms: " + selectedRooms);
+                    System.out.println("Event Type: " + eventType);
+                    System.out.println("Description: " + eventDescription);
+                    System.out.println("Time: " + eventTime);
+                }
+                else{
+                    System.out.println("Invalid choice, event was not created");
+                }
             }
             //Recalls menufunction
             menu(sT.getConsolePermissions(), sT);
@@ -339,7 +376,199 @@ public class Launcher {
 
     }
 
-    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
+    public static int eventBuildingGetter(sqlHandler sql, Scanner scan) throws SQLException{
+        int buildingID = 0;
+        boolean buildingFound = false;
+        try(PreparedStatement buildingPstmnt = conn.prepareStatement(sql.buildingListQuery())){
+            try(ResultSet buildingRS = buildingPstmnt.executeQuery()){
+                System.out.println("Buildings:");
+                while(buildingRS.next()){
+                    System.out.println(buildingRS.getInt(1) + ". " + buildingRS.getString(2));
+                }
+            }
+        }
+        System.out.println("Input building ID");
+        try{
+            buildingID = scan.nextInt();
+        }catch(InputMismatchException e){
+            System.out.println("Invalid input");
+            scan.next();
+            return eventBuildingGetter(sql, scan);
+        }
+        try(PreparedStatement buildingPstmnt = conn.prepareStatement(sql.buildingListQuery())){
+            try(ResultSet buildingRS = buildingPstmnt.executeQuery()){
+                while(buildingRS.next()){
+                    if(buildingRS.getInt(1) == buildingID){
+                        buildingFound = true;
+                    }
+                }
+            }
+        }
+        if(!buildingFound){
+            System.out.println("Building not found, try again");
+            return eventBuildingGetter(sql, scan);
+        }
+        return buildingID;
+    }
+
+    public static LocalDateTime eventDateTimeGetter(Scanner scan){
+        System.out.print("What day is the event happening? (Ex: yyyy-MM-dd)");
+        String day = scan.nextLine();
+        System.out.print("What time is the event happening? (Ex: HH:mm:ss)");
+        String time = scan.nextLine();
+        DateTimeFormatter sqlFormatting = DateTimeFormatter.ofPattern(("yyyy-MM-dd HH:mm:ss"));
+        try{
+            return LocalDateTime.parse(day + " " + time, sqlFormatting);
+        }catch(DateTimeException e){
+            System.out.println("Invalid date and time, try again");
+            return eventDateTimeGetter(scan);
+        }
+    }
+
+    public static String eventTypeGetter(Scanner scan){
+        String eventType = "";
+        System.out.println("What type of event is this? (Ex: Maintenance)");
+        eventType = scan.nextLine();
+        if(eventType.isBlank()){
+            System.out.println("Event type cannot be blank");
+            return eventTypeGetter(scan);
+        }
+        return eventType;
+    }
+
+    public static String eventDescriptionGetter(Scanner scan){
+        String description = "";
+        System.out.println("Enter event description, or press enter to skip");
+        description = scan.nextLine();
+        return description;
+    }
+
+    public static ArrayList<Integer> eventRoomGetter(sqlHandler sql, Scanner scan, int buildingID) throws SQLException{
+        ArrayList<Integer> selectedRooms = new ArrayList<Integer>();
+        boolean addMoreRooms = true;
+        while(addMoreRooms){
+            int floor = eventFloorGetter(sql, scan, buildingID);
+            int roomID = eventSingleRoomGetter(sql, scan, buildingID, floor);
+            if(!selectedRooms.contains(roomID)){
+                selectedRooms.add(roomID);
+            }
+            System.out.println("Add another room?");
+            System.out.println("1. Yes");
+            System.out.println("2. No");
+            try{
+                int choice = scan.nextInt();
+                if(choice == 2){
+                    addMoreRooms = false;
+                }
+            }catch(InputMismatchException e){
+                System.out.println("Invalid input, ending room selection");
+                scan.next();
+                addMoreRooms = false;
+            }
+        }
+        return selectedRooms;
+    }
+
+    public static int eventFloorGetter(sqlHandler sql, Scanner scan, int buildingID) throws SQLException{
+        int floor = 0;
+        boolean floorFound = false;
+        try(PreparedStatement floorPstmnt = conn.prepareStatement(sql.floorListQuery())){
+            floorPstmnt.setInt(1, buildingID);
+            try(ResultSet floorRS = floorPstmnt.executeQuery()){
+                System.out.println("Floors:");
+                while(floorRS.next()){
+                    System.out.println(floorRS.getInt(1));
+                }
+            }
+        }
+        System.out.println("Input floor");
+        try{
+            floor = scan.nextInt();
+        }catch(InputMismatchException e){
+            System.out.println("Invalid input");
+            scan.next();
+            return eventFloorGetter(sql, scan, buildingID);
+        }
+        try(PreparedStatement floorPstmnt = conn.prepareStatement(sql.floorListQuery())){
+            floorPstmnt.setInt(1, buildingID);
+            try(ResultSet floorRS = floorPstmnt.executeQuery()){
+                while(floorRS.next()){
+                    if(floorRS.getInt(1) == floor){
+                        floorFound = true;
+                    }
+                }
+            }
+        }
+        if(!floorFound){
+            System.out.println("Floor not found, try again");
+            return eventFloorGetter(sql, scan, buildingID);
+        }
+        return floor;
+    }
+
+    public static int eventSingleRoomGetter(sqlHandler sql, Scanner scan, int buildingID, int floor) throws SQLException{
+        int roomID = 0;
+        boolean roomFound = false;
+        try(PreparedStatement roomPstmnt = conn.prepareStatement(sql.roomsByFloorQuery())){
+            roomPstmnt.setInt(1, buildingID);
+            roomPstmnt.setInt(2, floor);
+            try(ResultSet roomRS = roomPstmnt.executeQuery()){
+                System.out.println("Rooms:");
+                while(roomRS.next()){
+                    System.out.println(roomRS.getInt(1));
+                }
+            }
+        }
+        System.out.println("Input room ID");
+        try{
+            roomID = scan.nextInt();
+        }catch(InputMismatchException e){
+            System.out.println("Invalid input");
+            scan.next();
+            return eventSingleRoomGetter(sql, scan, buildingID, floor);
+        }
+        try(PreparedStatement roomPstmnt = conn.prepareStatement(sql.roomsByFloorQuery())){
+            roomPstmnt.setInt(1, buildingID);
+            roomPstmnt.setInt(2, floor);
+            try(ResultSet roomRS = roomPstmnt.executeQuery()){
+                while(roomRS.next()){
+                    if(roomRS.getInt(1) == roomID){
+                        roomFound = true;
+                    }
+                }
+            }
+        }
+        if(!roomFound){
+            System.out.println("Room not found, try again");
+            return eventSingleRoomGetter(sql, scan, buildingID, floor);
+        }
+        return roomID;
+    }
+
+    public static void insertEventLog(sqlHandler sql, int userID, int buildingID, int roomID, String eventType, String eventDescription, LocalDateTime eventTime) throws SQLException{
+        try(PreparedStatement eventPstmnt = conn.prepareStatement(sql.newEventLogQuery())){
+            eventPstmnt.setInt(1, userID);
+            eventPstmnt.setInt(2, buildingID);
+            if(roomID == 0){
+                eventPstmnt.setNull(3, Types.INTEGER);
+            }
+            else{
+                eventPstmnt.setInt(3, roomID);
+            }
+            eventPstmnt.setString(4, eventType);
+            if(eventDescription.isBlank()){
+                eventPstmnt.setNull(5, Types.VARCHAR);
+            }
+            else{
+                eventPstmnt.setString(5, eventDescription);
+            }
+            eventPstmnt.setString(6, String.valueOf(eventTime));
+            eventPstmnt.setString(7, String.valueOf(LocalDateTime.now()));
+            eventPstmnt.executeUpdate();
+        }
+    }
+
+    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         /*1. make emergency menu (what, where). 2. get information from DB.
          * 3. theoretically send information.  */
         if(twoFactorCode(sT)) {
@@ -350,13 +579,43 @@ public class Launcher {
             if (sT.getConsolePermissions() == 4) {
                 System.out.println("------Emergency Report------");
                 System.out.println("Where is the emergency happening?");
-                String location = scan.nextLine();
+                int buildingID = eventBuildingGetter(sql, scan);
+                int locationChoice = 0;
+                System.out.println("1. Whole building");
+                System.out.println("2. Selected Rooms");
+                try{
+                    locationChoice = scan.nextInt();
+                }catch(InputMismatchException e){
+                    System.out.println("Invalid input");
+                    emergency(sT);
+                    return;
+                }
                 /*since this is date, could maybe connect to clock somehow?*/
-                System.out.print("What is the time/ when is the emergency happening? (Ex: date and time)");
-                String time = scan.nextLine();
-                System.out.println("\n Emergency reported.");
-                System.out.println("Location: " + location);
-                System.out.println("Time: " + time);
+                scan.nextLine();
+                LocalDateTime eventTime = eventDateTimeGetter(scan);
+                String eventType = "Emergency";
+                String eventDescription = eventDescriptionGetter(scan);
+                if(locationChoice == 1){
+                    insertEventLog(sql, sT.getConsoleUserID(), buildingID, 0, eventType, eventDescription, eventTime);
+                    System.out.println("\n Emergency reported.");
+                    System.out.println("Building ID: " + buildingID);
+                    System.out.println("Description: " + eventDescription);
+                    System.out.println("Time: " + eventTime);
+                }
+                else if(locationChoice == 2){
+                    ArrayList<Integer> selectedRooms = eventRoomGetter(sql, scan, buildingID);
+                    for(int roomID : selectedRooms){
+                        insertEventLog(sql, sT.getConsoleUserID(), buildingID, roomID, eventType, eventDescription, eventTime);
+                    }
+                    System.out.println("\n Emergency reported.");
+                    System.out.println("Building ID: " + buildingID);
+                    System.out.println("Rooms: " + selectedRooms);
+                    System.out.println("Description: " + eventDescription);
+                    System.out.println("Time: " + eventTime);
+                }
+                else{
+                    System.out.println("Invalid choice, emergency was not created");
+                }
             }
             //Recalls menufunction
             menu(sT.getConsolePermissions(), sT);

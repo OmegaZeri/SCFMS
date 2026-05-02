@@ -91,6 +91,25 @@ CREATE TABLE IF NOT EXISTS logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
+EVENT_LOG_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS EventLog (
+    eventID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    userID INT NOT NULL,
+    buildingID INT NOT NULL,
+    roomID INT,
+    EventType VARCHAR(50) NOT NULL,
+    Description VARCHAR(255),
+    eventDate DATETIME NOT NULL,
+    Created DATETIME NOT NULL,
+    CONSTRAINT fk_event_log_user
+        FOREIGN KEY (userID) REFERENCES users(userID),
+    CONSTRAINT fk_event_log_building
+        FOREIGN KEY (buildingID) REFERENCES buildings(buildingID),
+    CONSTRAINT fk_event_log_room
+        FOREIGN KEY (roomID) REFERENCES rooms(roomID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+"""
+
 INSERT_USERS_SQL = """
 INSERT INTO users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -374,6 +393,7 @@ def prepare_database(cursor, db_name: str) -> None:
 
 def recreate_tables(cursor) -> None:
     # Drop children first so reseeding stays simple.
+    cursor.execute("DROP TABLE IF EXISTS EventLog")
     cursor.execute("DROP TABLE IF EXISTS logs")
     cursor.execute("DROP TABLE IF EXISTS rooms")
     cursor.execute("DROP TABLE IF EXISTS guest_users")
@@ -386,6 +406,7 @@ def recreate_tables(cursor) -> None:
     cursor.execute(GUEST_USERS_TABLE_SQL)
     cursor.execute(ROOMS_TABLE_SQL)
     cursor.execute(LOGS_TABLE_SQL)
+    cursor.execute(EVENT_LOG_TABLE_SQL)
 
 
 def insert_seed_data(cursor, users, guest_users, buildings, rooms, logs) -> None:

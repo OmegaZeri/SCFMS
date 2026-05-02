@@ -46,6 +46,10 @@ public class sqlHandler {
                 public String guestPhoneNumberQuery(){return "select phoneNumber from guest_users where phonenumber = ?";}
                 public String newUserCreationQuery(){return "insert into users (userID, userName, Email, Password, PhoneNumber, Classification, Permissions, Age, Created) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";}
                 public String newGuestUserCreationQuery(){return "insert into guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, revokeAccess) values (?, ?, ?, ?, ?, ?, ?, ?)";}
+                public String buildingListQuery(){return "select buildingID, buildingName from buildings order by buildingID";}
+                public String floorListQuery(){return "select distinct floor((roomID % 1000) / 100) as floorNumber from rooms where buildingID = ? order by floorNumber";}
+                public String roomsByFloorQuery(){return "select roomID from rooms where buildingID = ? and floor((roomID % 1000) / 100) = ? order by roomID";}
+                public String newEventLogQuery(){return "insert into EventLog (userID, buildingID, roomID, EventType, Description, eventDate, Created) values (?, ?, ?, ?, ?, ?, ?)";}
                 public String requestPermissionsQuery(){return "select username, classification, permissions from users where password = ?";}
                 public String changeUserPermissionsQuery(){return "update users set classification = ?, permissions = ? where password = ?";}
                 public String roomQuery(){return "select roomID, privilegerequired from rooms natural join buildings where buildings.buildingname like ?";}
