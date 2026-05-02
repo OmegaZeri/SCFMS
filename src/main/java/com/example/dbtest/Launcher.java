@@ -12,15 +12,15 @@ import javax.crypto.*;
 public class Launcher {
     static Connection conn;
     static int accessAttempt;
+    static int roomAccessAttempt;
     static boolean isThreat= false;
     public static void main(String[] args) throws SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         do{
             dbConnector();
             login();
-        }while(monitoring(isThreat));
+        }while(monitoring(isThreat, roomAccessAttempt));
         System.exit(-1);
     }
-
     //function to connect program to database
     public static void dbConnector() throws SQLException {
         Scanner scan = new Scanner(System.in);
@@ -139,8 +139,8 @@ public class Launcher {
             do {
                 System.out.println("------Example University Console------");
                 System.out.println("      ------1. Access Logs------      ");
-                System.out.println("  ------1. Request Access Sim.------   ");
-                System.out.println("       ------  2. Quit   ------      ");
+                System.out.println("  ------2. Request Access Sim.------   ");
+                System.out.println("       ------  3. Quit   ------      ");
                 try {
                     choice = scan.nextInt();
                 }catch(InputMismatchException e){
@@ -626,6 +626,7 @@ public class Launcher {
         }
     }
     public static void createUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
+        //Function that starts the process of creating a new user
         if(twoFactorCode(sT)) {
             System.out.println("User Creation Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -640,6 +641,7 @@ public class Launcher {
         }
     }
     public static void guestUser(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
+        //Function that starts the process of creating a guest user
         if(twoFactorCode(sT)) {
             System.out.println("Guest User Creation Menu: " + "\nPlease pay attention to formatting");
             sqlHandler sql = new sqlHandler();
@@ -654,6 +656,7 @@ public class Launcher {
         }
     }
     public static void createUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
+        //Function that creates a new user through creating/inputting 9 fields, putting them into one string query, then updating users table in database
         int choice = choiceIn;
         sqlHandler sql = new sqlHandler();
         int newUserID =0;
@@ -944,6 +947,7 @@ public class Launcher {
         } while (choice != 11);
     }
     public static void guestUserMenu(int choiceIn, sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
+        //Function that creates a guest user through creating/inputting 8 fields, putting them into one string query, then updating guest_users table in database
         int choice = choiceIn;
         sqlHandler sql = new sqlHandler();
         int newUserID =0;
@@ -1184,6 +1188,7 @@ public class Launcher {
         } while (choice != 10);
 }
     public static void changePermissions(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
+        //Function that takes user input to find a user in database, and change their permissions
         int permissions = permissionsGetter(sT);
         String classifications = "";
         String passwordInput = "";
@@ -1243,6 +1248,7 @@ public class Launcher {
         }
     }
     public static int permissionsGetter(sessionToken sT) throws SQLException{
+        //Helper function to get new user integer permission
         System.out.println("Change user permissions:");
         Scanner scan = new Scanner(System.in);
         System.out.println("Input new user's permissions");
@@ -1256,13 +1262,18 @@ public class Launcher {
         }
         return newPermissions;
     }
-    public static boolean monitoring(boolean isThreat)throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        if(!isThreat){
+    public static boolean monitoring(boolean isThreat, int roomAccessAttempt)throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        //Monitors entire program to see if any actions are suspicious
+        if (roomAccessAttempt <3){
             return false;
         }
-        else{return true;}
+        else if(!isThreat){
+            return false;
+        }
+        return true;
     }
     public static boolean twoFactorCode(sessionToken sT){
+        //Helper function that asks for logged-in user's phonenumber to access any console functions
         int twofactAttempts = 0;
         boolean auth = false;
         Scanner phoneScan = new Scanner(System.in);
@@ -1297,6 +1308,7 @@ public class Launcher {
         return auth;
     }
     public static String requestAccess(sessionToken sT, int userPermissions) throws SQLException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InterruptedException {
+        //Function gives options for buildings to access
         int roomSelection=0;
         String buildingSelection="";
         int requiredPrivilege;
@@ -1321,6 +1333,7 @@ public class Launcher {
                 scan.next();
                 continue;
             }
+            //menu to select building
             switch(choice){
                 case 1:
                     buildingSelection="Admin Hall";
@@ -1351,6 +1364,7 @@ public class Launcher {
                     return null;
                 default: System.out.println("Invalid Choice"); continue;
             }
+            //runs helper function
             handleBuildingSelection(buildingSelection, sT, sql, scan);
             isAllowed=true;
 
@@ -1359,6 +1373,7 @@ public class Launcher {
         return null;
     }
     public static void roomOpen(int roomIDInput, sqlHandler sql)throws SQLException, InterruptedException{
+        //Helper function to handle the opening of rooms
         try(PreparedStatement roomUnlockPstmnt = conn.prepareStatement(sql.roomUnlockUpdate())) {
             roomUnlockPstmnt.setInt(1, roomIDInput);
             if(roomUnlockPstmnt.executeUpdate()==1){
@@ -1380,6 +1395,7 @@ public class Launcher {
         }
     }
     public static String newUserPasswordGeneration (sessionToken sT, sqlHandler sqlIn)throws SQLException {
+        //Helper function to generate randomized password for new user
         System.out.println("Password created");
         Faker passwordFaker = new Faker();
         boolean passwordGenerated=false;
@@ -1401,6 +1417,7 @@ public class Launcher {
         else{return null;}
     }
     public static String newGuestUserPasswordGeneration (sessionToken sT, sqlHandler sqlIn)throws SQLException {
+        //Helper function to generate randomized password for new user
         System.out.println("Password created");
         Faker passwordFaker = new Faker();
         boolean passwordGenerated=false;
@@ -1422,6 +1439,7 @@ public class Launcher {
         else{return null;}
     }
     public static String newUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn, String i) throws SQLException {
+        //helper function to get phone input
         Scanner scan = new Scanner(System.in);
         System.out.println("Enter a phone number:");
         System.out.println("Format xxxyyyzzzz");
@@ -1448,6 +1466,7 @@ public class Launcher {
         }
     }
     public static String newGuestUserPhoneNumberGeneration (sessionToken sT, sqlHandler sqlIn, String i) throws SQLException {
+        //helper function to get phone input
         Scanner scan = new Scanner(System.in);
         System.out.println("Enter a phone number:");
         System.out.println("Format xxxyyyzzzz");
@@ -1476,6 +1495,7 @@ public class Launcher {
         }
     }
     public static int newUserAgeGetter(int newUserAge){
+        //Helper function to get user input for age
         System.out.println("Enter new user's age");
         Scanner scan = new Scanner(System.in);
         try{
@@ -1491,6 +1511,7 @@ public class Launcher {
         return newUserAge;
     }
     public static int newGuestUserAgeGetter(int newUserAge){
+        //Helper function to get user input for age
         System.out.println("Enter new user's age");
         Scanner scan = new Scanner(System.in);
         try{
@@ -1506,20 +1527,27 @@ public class Launcher {
         return newUserAge;
     }
     private static void handleBuildingSelection(String buildingSelection, sessionToken sT, sqlHandler sql, Scanner scan) throws SQLException, InterruptedException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        //Helper function that receives selected building string, and through a couple sql queries, displays the rooms associated with that building, then checks to see if user can access that room
+        roomAccessAttempt=0;
         try(PreparedStatement roomQueryPstmnt = conn.prepareStatement(sql.roomQuery())){
+            // builds the input into the first sql query
             String input = "%" + buildingSelection + "%";
             roomQueryPstmnt.setString(1, input);
+            // executes that query and gets number of columns
             try(ResultSet roomQueryRS = roomQueryPstmnt.executeQuery()){
                 ResultSetMetaData rsmd = roomQueryRS.getMetaData();
                 int columnCount = rsmd.getColumnCount();
                 boolean rowsFound = false;
+                // gets user permissions
                 System.out.println("User's permissions: " + sT.getConsolePermissions());
+                // while the previous query returned data, prints out column name and data
                 while(roomQueryRS.next()){
                     rowsFound = true;
                     for(int i = 1; i <= columnCount; i++){
                         System.out.println(i + ": " + rsmd.getColumnName(i) + ": " + roomQueryRS.getInt(i));
                     }
                 }
+                // prompts user to select a room from previously outputted list
                 if(rowsFound){
                     System.out.println("Select a roomID");
                     try{
@@ -1527,11 +1555,14 @@ public class Launcher {
                         try(PreparedStatement roomExistsPstmnt = conn.prepareStatement(sql.roomExistsQuery())){
                             roomExistsPstmnt.setInt(1, roomSelection);
                             try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
+                                // if there exists a room that matches the selection, and the user has permission, opens room
                                 if(roomExistsRS.next() && roomExistsRS.getInt(1) <= roomSelection){
                                     roomOpen(roomSelection, sql);
                                 }
                                 else{
-                                    System.out.println("That room does not exist");
+                                    //user is denied because room doesnt exist or they don't have permission
+                                    System.out.println("That room does not exist, or you don't have permission to enter");
+                                    roomAccessAttempt++;
                                 }
                             }
                         }
