@@ -48,4 +48,8 @@ public class sqlHandler {
                 public String newGuestUserCreationQuery(){return "insert into guest_users (userID, userName, Email, Password, PhoneNumber, Age, Created, revokeAccess) values (?, ?, ?, ?, ?, ?, ?, ?)";}
                 public String requestPermissionsQuery(){return "select username, classification, permissions from users where password = ?";}
                 public String changeUserPermissionsQuery(){return "update users set classification = ?, permissions = ? where password = ?";}
+                public String roomQuery(){return "select roomID, privilegerequired from rooms natural join buildings where buildings.buildingname like ?";}
+                public String roomExistsQuery(){return"select privilegerequired from rooms where roomID = ?";}
+                public String roomUnlockUpdate(){return "update rooms set islocked = 0 where roomID=?";}
+                public String roomLockUpdate(){return "update rooms set islocked = 1 where roomID=?";}
 }
