@@ -1556,14 +1556,20 @@ public class Launcher {
                             roomExistsPstmnt.setInt(1, roomSelection);
                             try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
                                 // if there exists a room that matches the selection, and the user has permission, opens room
-                                if(roomExistsRS.next() && roomExistsRS.getInt(1) <= sT.getConsolePermissions()){
+                                if(roomExistsRS.next()){
                                     System.out.println("room perms: " + roomExistsRS.getInt(1) + " user perms: " + sT.getConsolePermissions());
-                                    roomOpen(roomSelection, sql);
-                                }
-                                else{
-                                    //user is denied because room doesnt exist or they don't have permission
-                                    System.out.println("That room does not exist, or you don't have permission to enter");
+                                    if(roomExistsRS.getInt(1) <= sT.getConsolePermissions()){
+                                        roomOpen(roomSelection, sql);
+                                    }
+                                    else{
+                                        System.out.println("You don't have permission to enter that room");
+                                        roomAccessAttempt++;
+                                        requestAccess(sT, sT.getConsolePermissions());
+                                    }
+                                } else {
+                                    System.out.println("That room does not exist");
                                     roomAccessAttempt++;
+                                    requestAccess(sT, sT.getConsolePermissions());
                                 }
                             }
                         }
