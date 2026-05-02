@@ -103,7 +103,7 @@ public class Launcher {
                             try (ResultSet permsRS = permissionsPstmnt.executeQuery()) {
                                 if (permsRS.next()) {
                                     if (permsRS.getInt(1) < 4) {
-                                        int perms = 1;
+                                        int perms = permsRS.getInt(1);
                                         sT.setConsoleUserPermissions(perms);
                                         menu(sT.getConsolePermissions(), sT);
                                     }
