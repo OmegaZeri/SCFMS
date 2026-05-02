@@ -568,7 +568,7 @@ public class Launcher {
         }
     }
 
-    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void emergency(sessionToken sT) throws SQLException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InterruptedException {
         /*1. make emergency menu (what, where). 2. get information from DB.
          * 3. theoretically send information.  */
         if(twoFactorCode(sT)) {
@@ -1556,7 +1556,8 @@ public class Launcher {
                             roomExistsPstmnt.setInt(1, roomSelection);
                             try(ResultSet roomExistsRS = roomExistsPstmnt.executeQuery()){
                                 // if there exists a room that matches the selection, and the user has permission, opens room
-                                if(roomExistsRS.next() && roomExistsRS.getInt(1) <= roomSelection){
+                                if(roomExistsRS.next() && roomExistsRS.getInt(1) <= sT.getConsolePermissions()){
+                                    System.out.println("room perms: " + roomExistsRS.getInt(1) + " user perms: " + sT.getConsolePermissions());
                                     roomOpen(roomSelection, sql);
                                 }
                                 else{
